@@ -22,7 +22,7 @@ export function Header() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => router.push('/add-employee')}
+            onClick={() => router.push('/employees/add')}
             className="hidden md:flex"
           >
             <UserPlus className="h-4 w-4 mr-2" />
