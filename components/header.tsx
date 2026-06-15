@@ -5,10 +5,14 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Moon, Sun, UserPlus, Users, CalendarCheck } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useEffect, useState } from "react"
 
 export function Header() {
   const { theme, setTheme } = useTheme()
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => setMounted(true), [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -17,10 +21,10 @@ export function Header() {
           <span className="text-sm text-muted-foreground">Dashboard</span>
           <span className="text-lg font-bold">Welcome back, HR Manager</span>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => router.push('/employees/add')}
             className="hidden md:flex"
@@ -28,8 +32,8 @@ export function Header() {
             <UserPlus className="h-4 w-4 mr-2" />
             Add Employee
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => router.push('/employees')}
             className="hidden md:flex"
@@ -37,8 +41,8 @@ export function Header() {
             <Users className="h-4 w-4 mr-2" />
             Employee List
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => router.push('/attendance')}
             className="hidden md:flex"
@@ -47,25 +51,29 @@ export function Header() {
             Attendance
           </Button>
 
-          <div className="flex items-center bg-muted rounded-full p-1">
-            <Button
-              variant={theme === "light"? "default" : "ghost"}
-              size="icon"
-              className="rounded-full h-8 w-8"
-              onClick={() => setTheme("light")}
-            >
-              <Sun className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={theme === "dark"? "default" : "ghost"}
-              size="icon"
-              className="rounded-full h-8 w-8"
-              onClick={() => setTheme("dark")}
-            >
-              <Moon className="h-4 w-4" />
-            </Button>
-          </div>
-          
+          {mounted? (
+            <div className="flex items-center bg-muted rounded-full p-1">
+              <Button
+                variant={theme === "light"? "default" : "ghost"}
+                size="icon"
+                className="rounded-full h-8 w-8"
+                onClick={() => setTheme("light")}
+              >
+                <Sun className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={theme === "dark"? "default" : "ghost"}
+                size="icon"
+                className="rounded-full h-8 w-8"
+                onClick={() => setTheme("dark")}
+              >
+                <Moon className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="h-10 w-[72px]" /> // Placeholder to prevent layout shift
+          )}
+
           <Avatar className="h-9 w-9">
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">HR</AvatarFallback>
           </Avatar>

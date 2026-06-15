@@ -1,7 +1,26 @@
-"use client"
-import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Toaster } from "sonner"
 
-export function ThemeProvider({ children,...props }: React.ComponentProps<typeof NextThemesProvider>) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Employee Management",
+  description: "Employee Records Management System",
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  )
 }

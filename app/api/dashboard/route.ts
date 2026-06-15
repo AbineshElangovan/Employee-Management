@@ -1,37 +1,77 @@
 import { NextResponse } from "next/server"
-import { openDb } from "@/lib/db"
+import db  from "@/lib/db"
+
+type DepartmentStat = {
+  department: string
+  count: number
+}
 
 export async function GET() {
   try {
     const db = await openDb()
-    
-    const total = await db.get("SELECT COUNT(*) as count FROM employees")
-    const active = await db.get("SELECT COUNT(*) as count FROM employees WHERE status = 'Active'")
-    const inactive = await db.get("SELECT COUNT(*) as count FROM employees WHERE status = 'Inactive'")
-    const onLeave = await db.get("SELECT COUNT(*) as count FROM employees WHERE status = 'On Leave'")
-    const avgAttendance = await db.get("SELECT AVG(attendancePercentage) as avg FROM employees")
-    const departments = await db.get("SELECT COUNT(DISTINCT department) as count FROM employees")
-    
-    const recentEmployees = await db.all("SELECT * FROM employees ORDER BY joiningDate DESC LIMIT 5")
-    
-    const deptSummary = await db.all(`
-      SELECT department, COUNT(*) as count,
-      ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM employees), 0) as percentage
-      FROM employees GROUP BY department
-    `)
+
+    const totalEmployees = await db.get<{ count: number }>(
+      "SELECT COUNT(*) as count FROM employees"
+    )
+
+    const activeEmployees = await db.get<{ count: number }>(
+      "SELECT COUNT(*) as count FROM employees WHERE status = ?",
+      ["active"]
+    )
+
+    const onLeaveEmployees = await db.get<{ count: number }>(
+      "SELECT COUNT(*) as count FROM employees WHERE status = ?",
+      ["on_leave"]
+    )
+
+    const deptStats = await db.all<DepartmentStat[]>(
+      `
+      SELECT department, COUNT(*) as count
+      FROM employees
+      GROUP BY department
+      `
+    )
+
+    const avgSalary = await db.get<{ avg: number }>(
+      "SELECT AVG(salary) as avg FROM employees"
+    )
+
+    const recentEmployees = await db.all(
+      `
+      SELECT *
+      FROM employees
+      ORDER BY createdAt DESC
+      LIMIT 5
+      `
+    )
+
+    const total = totalEmployees?.count || 1
+
+    const departmentSummary = deptStats.map((dept) => ({
+      name: dept.department,
+      value: dept.count,
+      percentage: Math.round((dept.count / total) * 100),
+    }))
 
     return NextResponse.json({
-      totalEmployees: total?.count || 0,
-      activeEmployees: active?.count || 0,
-      inactiveEmployees: inactive?.count || 0,
-      employeesOnLeave: onLeave?.count || 0,
-      totalDepartments: departments?.count || 0,
-      averageAttendance: Math.round(avgAttendance?.avg || 0),
-      recentEmployees: recentEmployees || [],
-      departmentSummary: deptSummary || []
+      totalEmployees: totalEmployees?.count || 0,
+      activeEmployees: activeEmployees?.count || 0,
+      onLeaveEmployees: onLeaveEmployees?.count || 0,
+      departmentSummary,
+      averageSalary: Math.round(avgSalary?.avg || 0),
+      recentEmployees,
     })
   } catch (error) {
-    console.error("Dashboard API Error:", error)
-    return NextResponse.json({ error: "Failed to fetch dashboard data" }, { status: 500 })
+    console.error("Dashboard Error:", error)
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error",
+      },
+      { status: 500 }
+    )
   }
 }

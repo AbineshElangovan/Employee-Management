@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Sparkles, Upload, X, Loader2 } from "lucide-react"
 import { Header } from "@/components/header"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useEmployeeStore } from "@/app/store/EmployeeStore"
 
@@ -33,31 +33,52 @@ const employeeSchema = z.object({
 
 type EmployeeFormValues = z.infer<typeof employeeSchema>
 
-export default function AddEmployeePage() {
+export default function EditEmployeePage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const { addEmployee } = useEmployeeStore()
+  const { updateEmployee } = useEmployeeStore()
   const [imagePreview, setImagePreview] = useState<string>("")
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
     mode: "onChange",
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      address: "",
-      employeeId: "",
-      department: "",
-      designation: "",
-      joiningDate: new Date().toISOString().split('T')[0],
-      salary: 0,
-      imageUrl: "",
-      status: "active",
-      attendancePercentage: 85,
-    },
   })
+
+  useEffect(() => {
+    fetchEmployee()
+  }, [params.id])
+
+  const fetchEmployee = async () => {
+    try {
+      const res = await fetch(`/api/employees/${params.id}`)
+      if (!res.ok) throw new Error("Not found")
+      const employee = await res.json()
+
+      form.reset({
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        email: employee.email,
+        phone: employee.phone,
+        address: employee.address,
+        employeeId: employee.employeeId,
+        department: employee.department,
+        designation: employee.designation || "",
+        joiningDate: employee.joiningDate.split('T')[0],
+        salary: employee.salary,
+        imageUrl: employee.imageUrl || "",
+        status: employee.status,
+        attendancePercentage: employee.attendancePercentage || 85,
+      })
+
+      if (employee.imageUrl) setImagePreview(employee.imageUrl)
+    } catch (error) {
+      toast.error("Employee not found")
+      router.push("/employees")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -79,27 +100,34 @@ export default function AddEmployeePage() {
 
   const onSubmit = async (values: EmployeeFormValues) => {
     try {
-      setLoading(true)
-      const res = await fetch("/api/employees", {
-        method: "POST",
+      setSaving(true)
+      const res = await fetch(`/api/employees/${params.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       })
+      if (!res.ok) throw new Error("Failed to update")
 
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || "Failed to create")
-      }
-
-      const newEmployee = await res.json()
-      addEmployee(newEmployee)
-      toast.success("Employee added successfully")
+      const updatedEmployee = await res.json()
+      updateEmployee(params.id, updatedEmployee)
+      toast.success("Employee updated successfully")
       router.push("/employees")
     } catch (error: any) {
       toast.error(error.message)
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -112,8 +140,8 @@ export default function AddEmployeePage() {
             Back to Employees
           </Link>
 
-          <h1 className="text-3xl font-bold mb-2">Add New Employee</h1>
-          <p className="text-muted-foreground mb-6">Create and initialize a secure digital record for new personnel entry.</p>
+          <h1 className="text-3xl font-bold mb-2">Edit Employee</h1>
+          <p className="text-muted-foreground mb-6">Update employee record details.</p>
 
           <div className="mb-6 rounded-lg border border-primary/40 bg-primary/10 p-4">
             <div className="flex items-center gap-2 text-primary">
@@ -131,7 +159,7 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="firstName" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>First Name</FormLabel>
-                      <FormControl><Input placeholder="John" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl><Input className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -139,7 +167,7 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="lastName" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Last Name</FormLabel>
-                      <FormControl><Input placeholder="Doe" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl><Input className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -147,7 +175,7 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="email" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Email Address</FormLabel>
-                      <FormControl><Input type="email" placeholder="john@gmail.com" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl><Input type="email" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -155,7 +183,7 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="phone" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Phone Number</FormLabel>
-                      <FormControl><Input placeholder="9876543210" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl><Input className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -163,7 +191,7 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="address" render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Home Address</FormLabel>
-                      <FormControl><Input placeholder="Chennai, Tamil Nadu" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl><Input className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -175,7 +203,7 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="employeeId" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Employee ID (Unique Key)</FormLabel>
-                      <FormControl><Input placeholder="EMP120" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl><Input className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -202,6 +230,14 @@ export default function AddEmployeePage() {
                     </FormItem>
                   )} />
 
+                  <FormField control={form.control} name="designation" render={({ field, fieldState }) => (
+                    <FormItem className="mb-4">
+                      <FormLabel>Designation</FormLabel>
+                      <FormControl><Input placeholder="Software Engineer" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
                   <FormField control={form.control} name="joiningDate" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Official Joining Date</FormLabel>
@@ -217,7 +253,6 @@ export default function AddEmployeePage() {
                         <Input
                           type="text"
                           inputMode="numeric"
-                          placeholder="50000"
                           className={fieldState.error? "border-destructive" : ""}
                           {...field}
                           value={field.value || ""}
@@ -288,7 +323,6 @@ export default function AddEmployeePage() {
                         <Input
                           type="text"
                           inputMode="numeric"
-                          placeholder="85"
                           className={fieldState.error? "border-destructive" : ""}
                           {...field}
                           value={field.value || ""}
@@ -305,10 +339,10 @@ export default function AddEmployeePage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel Process</Button>
-                <Button type="submit" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {loading? "Adding..." : "Add Employee"}
+                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+                <Button type="submit" disabled={saving}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {saving? "Updating..." : "Update Employee"}
                 </Button>
               </div>
             </form>

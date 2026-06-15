@@ -1,9 +1,6 @@
-import sqlite3 from "sqlite3"
-import { open } from "sqlite"
+import Database from "better-sqlite3"
+import path from "path"
 
-export async function openDb() {
-  return open({
-    filename: "./employee.db",
-    driver: sqlite3.Database
-  })
-}
+const db = new Database(path.join(process.cwd(), "data.db"))
+
+export default db
