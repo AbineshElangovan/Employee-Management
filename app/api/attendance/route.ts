@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import db from "@/lib/db"
 
-export const dynamic = 'force-dynamic'
-
 interface Employee {
   id: string
   firstName: string
@@ -12,28 +10,48 @@ interface Employee {
   attendancePercentage: number
 }
 
+interface AttendanceStats {
+  average: number
+  excellent: number
+  good: number
+  averageCount: number
+  poor: number
+}
+
 export async function GET() {
   try {
-    const employees = db.prepare(
-      `SELECT id, firstName, lastName, employeeId, department, attendancePercentage 
-       FROM employees 
-       WHERE attendancePercentage IS NOT NULL 
-       ORDER BY attendancePercentage DESC`
-    ).all() as Employee[]
+    const employees = db
+      .prepare(
+        `SELECT 
+          id, 
+          firstName, 
+          lastName, 
+          employeeId, 
+          department, 
+          COALESCE(attendancePercentage, 0) AS attendancePercentage
+         FROM employees
+         ORDER BY attendancePercentage DESC`
+      )
+      .all() as Employee[]
 
-    const stats = {
-      average: employees.length > 0 
-        ? Math.round(employees.reduce((acc: number, e: Employee) => acc + (e.attendancePercentage || 0), 0) / employees.length) 
-        : 0,
-      excellent: employees.filter((e: Employee) => e.attendancePercentage >= 90).length,
-      good: employees.filter((e: Employee) => e.attendancePercentage >= 75 && e.attendancePercentage < 90).length,
-      averageCount: employees.filter((e: Employee) => e.attendancePercentage >= 50 && e.attendancePercentage < 75).length,
-      poor: employees.filter((e: Employee) => e.attendancePercentage < 50).length
-    }
+    const stats = db
+      .prepare(
+        `SELECT
+          ROUND(COALESCE(AVG(attendancePercentage), 0)) AS average,
+          COUNT(CASE WHEN attendancePercentage >= 90 THEN 1 END) AS excellent,
+          COUNT(CASE WHEN attendancePercentage >= 75 AND attendancePercentage < 90 THEN 1 END) AS good,
+          COUNT(CASE WHEN attendancePercentage >= 50 AND attendancePercentage < 75 THEN 1 END) AS averageCount,
+          COUNT(CASE WHEN attendancePercentage < 50 OR attendancePercentage IS NULL THEN 1 END) AS poor
+        FROM employees`
+      )
+      .get() as AttendanceStats
 
     return NextResponse.json({ employees, stats })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Failed to fetch attendance" }, { status: 500 })
+    console.error("Attendance fetch error:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch attendance" },
+      { status: 500 }
+    )
   }
 }

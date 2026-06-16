@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
 import { cn } from "@/lib/utils";
+import { Header } from "@/components/header"
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -28,6 +29,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
+          <Header />
           {children}
           <Toaster />
         </ThemeProvider>

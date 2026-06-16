@@ -96,7 +96,7 @@ export default function AddEmployeePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* <Header /> */}
       <div className="text-foreground p-8">
         <div className="max-w-6xl mx-auto">
           <Link href="/employees" className="inline-flex items-center text-sm text-primary hover:text-primary/80 mb-4">

@@ -48,7 +48,7 @@ export default function DashboardPage() {
   if (loading || !data) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        
         <div className="flex items-center justify-center p-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* <Header /> */}
       <div className="p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           <div>

@@ -111,7 +111,7 @@ export default function EmployeeEditPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* <Header /> */}
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
@@ -120,7 +120,7 @@ export default function EmployeeEditPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* <Header /> */}
       <main className="container mx-auto p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
