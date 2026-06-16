@@ -7,6 +7,7 @@ export async function GET() {
     const testEmployees = [
       {
         id: nanoid(),
+        imageUrl: "https://randomuser.me/api/portraits/men/1.jpg",
         firstName: "John",
         lastName: "Doe",
         email: "john@demo.com",
@@ -23,6 +24,7 @@ export async function GET() {
       },
       {
         id: nanoid(),
+        imageUrl: "https://randomuser.me/api/portraits/women/2.jpg",
         firstName: "Jane",
         lastName: "Smith",
         email: "jane@demo.com",
@@ -44,16 +46,17 @@ export async function GET() {
 
     const stmt = db.prepare(`
       INSERT INTO employees (
-        id, firstName, lastName, email, phone, address, employeeId,
+        id, imageUrl, firstName, lastName, email, phone, address, employeeId,
         department, designation, joiningDate, salary, status,
-        attendancePercentage, createdAt
+        attendancePercentage, createdAt, updatedAt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `)
 
     for (const emp of testEmployees) {
       stmt.run(
         emp.id,
+        emp.imageUrl,
         emp.firstName,
         emp.lastName,
         emp.email,
@@ -75,6 +78,7 @@ export async function GET() {
       count: testEmployees.length,
     })
   } catch (error) {
+    console.error("Seed Route Error:", error)
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Unknown error",

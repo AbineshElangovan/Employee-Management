@@ -1,10 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Table,
   TableBody,
@@ -20,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Pencil, Search, Eye } from "lucide-react"
+import { Pencil, Search, Eye } from "lucide-react"
 import { toast } from "sonner"
 import { Header } from "@/components/header"
 
@@ -34,8 +36,8 @@ type Employee = {
   designation?: string
   salary: number
   attendancePercentage?: number
-  status: "active" | "inactive" | "on_leave"
-  imageUrl?: string | null
+  status: "Active" | "Inactive" | "On Leave"
+  Image?: string | null
 }
 
 export default function EmployeesPage() {
@@ -47,37 +49,30 @@ export default function EmployeesPage() {
   const [deptFilter, setDeptFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
 
-  useEffect(() => {
-    fetchEmployees()
-  }, [])
-
-  useEffect(() => {
-    filterEmployees()
-  }, [employees, searchTerm, deptFilter, statusFilter])
-
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       const res = await fetch("/api/employees")
       if (!res.ok) throw new Error("Failed to fetch")
       const data = await res.json()
       setEmployees(data)
-    } catch (error) {
+    } catch {
       toast.error("Failed to load employees")
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const filterEmployees = () => {
+  const filterEmployees = useCallback(() => {
     let filtered = [...employees]
 
     if (searchTerm) {
+      const term = searchTerm.toLowerCase()
       filtered = filtered.filter(
         (emp) =>
-          emp.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase())
+          emp.firstName.toLowerCase().includes(term) ||
+          emp.lastName.toLowerCase().includes(term) ||
+          emp.email.toLowerCase().includes(term) ||
+          emp.employeeId.toLowerCase().includes(term)
       )
     }
 
@@ -90,12 +85,20 @@ export default function EmployeesPage() {
     }
 
     setFilteredEmployees(filtered)
-  }
+  }, [employees, searchTerm, deptFilter, statusFilter])
+
+  useEffect(() => {
+    fetchEmployees()
+  }, [fetchEmployees])
+
+  useEffect(() => {
+    filterEmployees()
+  }, [filterEmployees])
 
   const getStatusColor = (status: string) => {
-    if (status === "active") return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
-    if (status === "on_leave") return "bg-amber-500/20 text-amber-500 border-amber-500/30"
-    return "bg-muted text-muted-foreground border-border"
+    if (status === "Active") return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
+    if (status === "On Leave") return "bg-amber-500/20 text-amber-500 border-amber-500/30"
+    return "bg-red-500/20 text-red-500 border-red-500/30"
   }
 
   const departments = [...new Set(employees.map((e) => e.department))]
@@ -106,24 +109,11 @@ export default function EmployeesPage() {
       <Header />
       <div className="text-foreground p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-6 rounded-lg border bg-card p-4">
-            <div>
-              <p className="text-sm text-primary">Employee</p>
-              <h1 className="text-2xl font-bold">Employee Records Management</h1>
-            </div>
-            <Button asChild>
-              <Link href="/employees/add">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Employee
-              </Link>
-            </Button>
-          </div>
-
           <div className="rounded-lg border bg-card p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Employee Master Database</h2>
-            
+
             <div className="flex flex-wrap gap-3 mb-4">
-              <div className="relative flex-1 min-w-[200px]">
+              <div className="relative flex-1 min-w-50">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search..."
@@ -132,14 +122,16 @@ export default function EmployeesPage() {
                   className="pl-9"
                 />
               </div>
-              <Select value={deptFilter} onValueChange={setDeptFilter}>
-                <SelectTrigger className="w-[140px]">
+              <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val?? "all")}>
+                <SelectTrigger className="w-35">
                   <SelectValue placeholder="Dept" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Depts</SelectItem>
+                  <SelectItem value="all">All Departments</SelectItem>
                   {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -154,25 +146,25 @@ export default function EmployeesPage() {
                 All Employees
               </Button>
               <Button
-                variant={statusFilter === "active"? "default" : "outline"}
+                variant={statusFilter === "Active"? "default" : "outline"}
                 size="sm"
-                onClick={() => setStatusFilter("active")}
+                onClick={() => setStatusFilter("Active")}
               >
                 Active
               </Button>
               <Button
-                variant={statusFilter === "inactive"? "default" : "outline"}
+                variant={statusFilter === "Inactive"? "default" : "outline"}
                 size="sm"
-                onClick={() => setStatusFilter("inactive")}
+                onClick={() => setStatusFilter("Inactive")}
               >
                 Inactive
               </Button>
               <Button
-                variant={deptFilter!== "all"? "default" : "outline"}
+                variant={statusFilter === "On Leave"? "default" : "outline"}
                 size="sm"
-                onClick={() => setDeptFilter(deptFilter === "all"? departments[0] : "all")}
+                onClick={() => setStatusFilter("On Leave")}
               >
-                By Department
+                On Leave
               </Button>
             </div>
           </div>
@@ -195,8 +187,11 @@ export default function EmployeesPage() {
               <TableBody>
                 {loading? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      Loading...
+                    <TableCell colSpan={9} className="py-8">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Spinner />
+                        <span>Loading employees...</span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : displayEmployees.length === 0? (
@@ -209,15 +204,18 @@ export default function EmployeesPage() {
                   displayEmployees.map((emp) => (
                     <TableRow key={emp.id}>
                       <TableCell>
-                        {emp.imageUrl? (
-                          <img
-                            src={emp.imageUrl}
+                        {emp.Image? (
+                          <Image
+                            src={emp.Image}
                             alt={emp.firstName}
-                            className="h-10 w-10 rounded-full object-cover border"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover border"
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm">
-                            {emp.firstName[0]}{emp.lastName[0]}
+                            {emp.firstName[0]}
+                            {emp.lastName[0]}
                           </div>
                         )}
                       </TableCell>
@@ -232,17 +230,17 @@ export default function EmployeesPage() {
                       <TableCell>
                         <Badge className={getStatusColor(emp.status)}>
                           <span className="mr-1.5 h-2 w-2 rounded-full bg-current" />
-                          {emp.status.replace("_", " ")}
+                          {emp.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/employees/${emp.id}`}>
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Link>
-                          </Button>
+                         <Button variant="outline" size="sm" asChild>
+                          <Link href={`/employees/${emp.id}`}>
+                           <Eye className="h-4 w-4 mr-1" />
+                               View
+                                 </Link>
+                            </Button>
                           <Button variant="outline" size="sm" asChild>
                             <Link href={`/employees/edit/${emp.id}`}>
                               <Pencil className="h-4 w-4 mr-1" />

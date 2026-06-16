@@ -1,23 +1,5 @@
 import { create } from 'zustand'
-
-export type Employee = {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  address: string
-  employeeId: string
-  department: string
-  designation?: string
-  joiningDate: string
-  salary: number
-  imageUrl?: string
-  status: "active" | "inactive" | "on_leave"
-  attendancePercentage?: number
-  createdAt?: string
-  updatedAt?: string
-}
+import { getEmployees, Employee } from '@/lib/db-actions'
 
 type EmployeeStore = {
   employees: Employee[]
@@ -60,8 +42,7 @@ export const useEmployeeStore = create<EmployeeStore>((set, get) => ({
   fetchEmployees: async () => {
     set({ loading: true })
     try {
-      const res = await fetch("/api/employees")
-      const data = await res.json()
+      const data = await getEmployees()
       set({ employees: data, loading: false })
     } catch (error) {
       console.error("Failed to fetch employees:", error)

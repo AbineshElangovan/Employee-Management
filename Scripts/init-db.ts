@@ -1,4 +1,4 @@
-import  openDb from "@/lib/db"
+import  db from "@/lib/db"
 
 async function init() {
   const db = await openDb();

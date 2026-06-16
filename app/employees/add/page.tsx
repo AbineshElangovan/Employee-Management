@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -9,10 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/forms"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Sparkles, Upload, X, Loader2 } from "lucide-react"
+import { ArrowLeft, Sparkles, Upload, X } from "lucide-react"
 import { Header } from "@/components/header"
 import { useState } from "react"
 import { toast } from "sonner"
+import { Spinner } from "@/components/ui/spinner"
+import { createEmployee } from "@/lib/db-actions"
 import { useEmployeeStore } from "@/app/store/EmployeeStore"
 
 const employeeSchema = z.object({
@@ -55,7 +58,7 @@ export default function AddEmployeePage() {
       salary: 0,
       imageUrl: "",
       status: "active",
-      attendancePercentage: 85,
+      attendancePercentage: 0,
     },
   })
 
@@ -78,28 +81,17 @@ export default function AddEmployeePage() {
   }
 
   const onSubmit = async (values: EmployeeFormValues) => {
-    try {
-      setLoading(true)
-      const res = await fetch("/api/employees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      })
+    setLoading(true)
+    const result = await createEmployee(values)
 
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || "Failed to create")
-      }
-
-      const newEmployee = await res.json()
-      addEmployee(newEmployee)
+    if (result.success && result.data) {
+      addEmployee(result.data)
       toast.success("Employee added successfully")
-      router.push("/employees")
-    } catch (error: any) {
-      toast.error(error.message)
-    } finally {
-      setLoading(false)
+      router.push(`/employees?new=${result.data.id}`)
+    } else {
+      toast.error(result.error || "Failed to create employee")
     }
+    setLoading(false)
   }
 
   return (
@@ -244,7 +236,13 @@ export default function AddEmployeePage() {
                         <div className="space-y-3">
                           {imagePreview? (
                             <div className="relative w-32 h-32">
-                              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg border" />
+                              <Image
+                                src={imagePreview}
+                                alt="Preview"
+                                width={128}
+                                height={128}
+                                className="object-cover rounded-lg border"
+                              />
                               <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={removeImage}>
                                 <X className="h-3 w-3" />
                               </Button>
@@ -307,7 +305,7 @@ export default function AddEmployeePage() {
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={() => router.back()}>Cancel Process</Button>
                 <Button type="submit" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading && <Spinner className="mr-2" />}
                   {loading? "Adding..." : "Add Employee"}
                 </Button>
               </div>

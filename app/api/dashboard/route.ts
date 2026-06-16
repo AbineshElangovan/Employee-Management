@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import db  from "@/lib/db"
+import db from "@/lib/db"
 
 type DepartmentStat = {
   department: string
@@ -8,42 +8,24 @@ type DepartmentStat = {
 
 export async function GET() {
   try {
-    const db = await openDb()
+    const totalEmployees = db.prepare("SELECT COUNT(*) as count FROM employees").get() as { count: number } | undefined
+    const activeEmployees = db.prepare("SELECT COUNT(*) as count FROM employees WHERE status = ?").get("active") as { count: number } | undefined
+    const onLeaveEmployees = db.prepare("SELECT COUNT(*) as count FROM employees WHERE status = ?").get("on_leave") as { count: number } | undefined
 
-    const totalEmployees = await db.get<{ count: number }>(
-      "SELECT COUNT(*) as count FROM employees"
-    )
-
-    const activeEmployees = await db.get<{ count: number }>(
-      "SELECT COUNT(*) as count FROM employees WHERE status = ?",
-      ["active"]
-    )
-
-    const onLeaveEmployees = await db.get<{ count: number }>(
-      "SELECT COUNT(*) as count FROM employees WHERE status = ?",
-      ["on_leave"]
-    )
-
-    const deptStats = await db.all<DepartmentStat[]>(
-      `
+    const deptStats = db.prepare(`
       SELECT department, COUNT(*) as count
       FROM employees
       GROUP BY department
-      `
-    )
+    `).all() as DepartmentStat[]
 
-    const avgSalary = await db.get<{ avg: number }>(
-      "SELECT AVG(salary) as avg FROM employees"
-    )
+    const avgSalary = db.prepare("SELECT AVG(salary) as avg FROM employees").get() as { avg: number } | undefined
 
-    const recentEmployees = await db.all(
-      `
+    const recentEmployees = db.prepare(`
       SELECT *
       FROM employees
       ORDER BY createdAt DESC
-      LIMIT 5
-      `
-    )
+      LIMIT 8
+    `).all()
 
     const total = totalEmployees?.count || 1
 
