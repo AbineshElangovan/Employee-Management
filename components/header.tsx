@@ -12,7 +12,6 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    
     setMounted(true)
   }, [])
 

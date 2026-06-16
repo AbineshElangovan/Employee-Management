@@ -235,12 +235,12 @@ export default function EmployeesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/employees/${emp.id}`}>
-                           <Eye className="h-4 w-4 mr-1" />
-                               View
-                                 </Link>
-                            </Button>
+                        <Link href={`/employees/view?id=${emp.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-1" />
+                           View
+                      </Button>
+                        </Link>
                           <Button variant="outline" size="sm" asChild>
                             <Link href={`/employees/edit/${emp.id}`}>
                               <Pencil className="h-4 w-4 mr-1" />
