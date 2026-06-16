@@ -31,6 +31,7 @@ export default function DashboardPage() {
         const res = await fetch("/api/dashboard")
         if (!res.ok) throw new Error("Failed to fetch")
         const json = await res.json()
+        console.log("data", json)
         setData(json)
       } catch (error) {
         toast.error("Failed to load dashboard")
@@ -41,7 +42,7 @@ export default function DashboardPage() {
     }
 
     fetchData()
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
   }, [])
 
   if (loading || !data) {

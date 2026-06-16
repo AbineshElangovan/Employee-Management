@@ -24,7 +24,7 @@ export async function GET() {
       SELECT *
       FROM employees
       ORDER BY createdAt DESC
-      LIMIT 8
+      LIMIT 9
     `).all()
 
     const total = totalEmployees?.count || 1
