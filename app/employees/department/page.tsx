@@ -1,21 +1,7 @@
 import db from "@/lib/db"
 import { Header } from "@/components/header"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-
-import {
-  Building2,
-  Users,
-  IndianRupee,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-} from "lucide-react"
-
+import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
+import {Building2,Users,IndianRupee,TrendingUp,TrendingDown,Clock,} from "lucide-react"
 export const revalidate = 3600
 
 type Department = {
@@ -76,7 +62,7 @@ export default async function DepartmentPage() {
       <Header />
 
       <main className="w-full px-6 py-6 space-y-6">
-        {/* Hero Section */}
+   
         <Card>
           <CardContent className="flex items-center gap-4 p-8">
             <div className="rounded-xl bg-blue-600 p-4 text-white">
@@ -95,9 +81,9 @@ export default async function DepartmentPage() {
           </CardContent>
         </Card>
 
-        {/* Content */}
+       
         <div className="grid lg:grid-cols-[2fr_1fr] gap-6">
-          {/* Department Overview */}
+  
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">

@@ -7,15 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner"
-import {
-  Table, TableBody, TableCell, TableHead,
-  TableHeader, TableRow,
-} from "@/components/ui/table"
-import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
-} from "@/components/ui/select"
-import { Pencil, Search, Eye } from "lucide-react"
+import {Table, TableBody, TableCell, TableHead,TableHeader, TableRow,} from "@/components/ui/table"
+import {Select, SelectContent, SelectItem,SelectTrigger, SelectValue,} from "@/components/ui/select"
+import { ArrowLeft, Pencil, Search, Eye } from "lucide-react"
 import { Header } from "@/components/header"
 import { useEmployeeStore } from "@/app/store/EmployeeStore"
 
@@ -43,11 +37,11 @@ export default function EmployeesPage() {
       )
     }
 
-    if (deptFilter !== "all") {
+    if (deptFilter!== "all") {
       filtered = filtered.filter((emp) => emp.department === deptFilter)
     }
 
-    if (statusFilter !== "all") {
+    if (statusFilter!== "all") {
       filtered = filtered.filter((emp) => emp.status === statusFilter)
     }
 
@@ -68,7 +62,7 @@ export default function EmployeesPage() {
 
   const filtered = filteredEmployees()
   const departments = [...new Set(employees.map((e) => e.department))]
-  const displayEmployees = showAll ? filtered : filtered.slice(0, 10)
+  const displayEmployees = showAll? filtered : filtered.slice(0, 10)
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,7 +70,14 @@ export default function EmployeesPage() {
       <div className="text-foreground p-8">
         <div className="max-w-7xl mx-auto">
           <div className="rounded-lg border bg-card p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Employee Master Database</h2>
+            <div className="flex items-center gap-4 mb-4">
+              <Button variant="outline" size="icon" asChild>
+               <Link href="/" aria-label="Back to Dashboard">
+               <ArrowLeft className="h-4 w-4" />
+               </Link>
+              </Button>
+              <h2 className="text-xl font-semibold">Employee Master Database</h2>
+            </div>
 
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="relative flex-1 min-w-50">
@@ -85,10 +86,9 @@ export default function EmployeesPage() {
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
+                  className="pl-9"/>
               </div>
-              <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val ?? "all")}>
+              <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val?? "all")}>
                 <SelectTrigger className="w-35">
                   <SelectValue placeholder="Dept" />
                 </SelectTrigger>
@@ -105,11 +105,11 @@ export default function EmployeesPage() {
               {["all", "active", "inactive", "on_leave"].map((s) => (
                 <Button
                   key={s}
-                  variant={statusFilter === s ? "default" : "outline"}
+                  variant={statusFilter === s? "default" : "outline"}
                   size="sm"
                   onClick={() => setStatusFilter(s)}
                 >
-                  {s === "all" ? "All Employees" : getStatusLabel(s)}
+                  {s === "all"? "All Employees" : getStatusLabel(s)}
                 </Button>
               ))}
             </div>
@@ -131,7 +131,7 @@ export default function EmployeesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {loading? (
                   <TableRow>
                     <TableCell colSpan={9} className="py-8">
                       <div className="flex items-center justify-center gap-2 text-muted-foreground">
@@ -140,7 +140,7 @@ export default function EmployeesPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : displayEmployees.length === 0 ? (
+                ) : displayEmployees.length === 0? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       No employees found.
@@ -150,7 +150,7 @@ export default function EmployeesPage() {
                   displayEmployees.map((emp) => (
                     <TableRow key={emp.id}>
                       <TableCell>
-                        {emp.imageUrl ? (
+                        {emp.imageUrl? (
                           <Image
                             src={emp.imageUrl}
                             alt={emp.firstName}
@@ -171,7 +171,7 @@ export default function EmployeesPage() {
                       <TableCell>{emp.department}</TableCell>
                       <TableCell>{emp.designation || "—"}</TableCell>
                       <TableCell>₹{emp.salary.toLocaleString("en-IN")}</TableCell>
-                      <TableCell>{emp.attendancePercentage ?? 0}%</TableCell>
+                      <TableCell>{emp.attendancePercentage?? 0}%</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(emp.status)}>
                           <span className="mr-1.5 h-2 w-2 rounded-full bg-current" />
@@ -203,7 +203,7 @@ export default function EmployeesPage() {
             {filtered.length > 10 && (
               <div className="p-4 border-t text-center">
                 <Button variant="outline" onClick={() => setShowAll(!showAll)}>
-                  {showAll ? "Show Less" : `Show All (${filtered.length})`}
+                  {showAll? "Show Less" : `Show All (${filtered.length})`}
                 </Button>
               </div>
             )}
