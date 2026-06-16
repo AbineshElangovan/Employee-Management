@@ -8,101 +8,67 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Spinner } from "@/components/ui/spinner"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead,
+  TableHeader, TableRow,
 } from "@/components/ui/table"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { Pencil, Search, Eye } from "lucide-react"
-import { toast } from "sonner"
 import { Header } from "@/components/header"
-
-type Employee = {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  employeeId: string
-  department: string
-  designation?: string
-  salary: number
-  attendancePercentage?: number
-  status: "Active" | "Inactive" | "On Leave"
-  Image?: string | null
-}
+import { useEmployeeStore } from "@/app/store/EmployeeStore"
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([])
-  const [loading, setLoading] = useState(true)
+  const { employees, loading, fetchEmployees } = useEmployeeStore()
   const [showAll, setShowAll] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [deptFilter, setDeptFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
 
-  const fetchEmployees = useCallback(async () => {
-    try {
-      const res = await fetch("/api/employees")
-      if (!res.ok) throw new Error("Failed to fetch")
-      const data = await res.json()
-      setEmployees(data)
-    } catch {
-      toast.error("Failed to load employees")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const filterEmployees = useCallback(() => {
-    let filtered = [...employees]
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(
-        (emp) =>
-          emp.firstName.toLowerCase().includes(term) ||
-          emp.lastName.toLowerCase().includes(term) ||
-          emp.email.toLowerCase().includes(term) ||
-          emp.employeeId.toLowerCase().includes(term)
-      )
-    }
-
-    if (deptFilter!== "all") {
-      filtered = filtered.filter((emp) => emp.department === deptFilter)
-    }
-
-    if (statusFilter!== "all") {
-      filtered = filtered.filter((emp) => emp.status === statusFilter)
-    }
-
-    setFilteredEmployees(filtered)
-  }, [employees, searchTerm, deptFilter, statusFilter])
-
   useEffect(() => {
     fetchEmployees()
   }, [fetchEmployees])
 
-  useEffect(() => {
-    filterEmployees()
-  }, [filterEmployees])
+  const filteredEmployees = useCallback(() => {
+    let filtered = [...employees]
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter((emp) =>
+        emp.firstName.toLowerCase().includes(term) ||
+        emp.lastName.toLowerCase().includes(term) ||
+        emp.email.toLowerCase().includes(term) ||
+        emp.employeeId.toLowerCase().includes(term)
+      )
+    }
+
+    if (deptFilter !== "all") {
+      filtered = filtered.filter((emp) => emp.department === deptFilter)
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((emp) => emp.status === statusFilter)
+    }
+
+    return filtered
+  }, [employees, searchTerm, deptFilter, statusFilter])
 
   const getStatusColor = (status: string) => {
-    if (status === "Active") return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
-    if (status === "On Leave") return "bg-amber-500/20 text-amber-500 border-amber-500/30"
+    if (status === "active") return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
+    if (status === "on_leave") return "bg-amber-500/20 text-amber-500 border-amber-500/30"
     return "bg-red-500/20 text-red-500 border-red-500/30"
   }
 
+  const getStatusLabel = (status: string) => {
+    if (status === "active") return "Active"
+    if (status === "on_leave") return "On Leave"
+    return "Inactive"
+  }
+
+  const filtered = filteredEmployees()
   const departments = [...new Set(employees.map((e) => e.department))]
-  const displayEmployees = showAll? filteredEmployees : filteredEmployees.slice(0, 10)
+  const displayEmployees = showAll ? filtered : filtered.slice(0, 10)
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,50 +88,30 @@ export default function EmployeesPage() {
                   className="pl-9"
                 />
               </div>
-              <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val?? "all")}>
+              <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val ?? "all")}>
                 <SelectTrigger className="w-35">
                   <SelectValue placeholder="Dept" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Departments</SelectItem>
                   {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex gap-2 mb-4">
-              <Button
-                variant={statusFilter === "all"? "default" : "outline"}
-                size="sm"
-                onClick={() => setStatusFilter("all")}
-              >
-                All Employees
-              </Button>
-              <Button
-                variant={statusFilter === "Active"? "default" : "outline"}
-                size="sm"
-                onClick={() => setStatusFilter("Active")}
-              >
-                Active
-              </Button>
-              <Button
-                variant={statusFilter === "Inactive"? "default" : "outline"}
-                size="sm"
-                onClick={() => setStatusFilter("Inactive")}
-              >
-                Inactive
-              </Button>
-              <Button
-                variant={statusFilter === "On Leave"? "default" : "outline"}
-                size="sm"
-                onClick={() => setStatusFilter("On Leave")}
-              >
-                On Leave
-              </Button>
+              {["all", "active", "inactive", "on_leave"].map((s) => (
+                <Button
+                  key={s}
+                  variant={statusFilter === s ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter(s)}
+                >
+                  {s === "all" ? "All Employees" : getStatusLabel(s)}
+                </Button>
+              ))}
             </div>
           </div>
 
@@ -185,7 +131,7 @@ export default function EmployeesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading? (
+                {loading ? (
                   <TableRow>
                     <TableCell colSpan={9} className="py-8">
                       <div className="flex items-center justify-center gap-2 text-muted-foreground">
@@ -194,7 +140,7 @@ export default function EmployeesPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : displayEmployees.length === 0? (
+                ) : displayEmployees.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       No employees found.
@@ -204,18 +150,17 @@ export default function EmployeesPage() {
                   displayEmployees.map((emp) => (
                     <TableRow key={emp.id}>
                       <TableCell>
-                        {emp.Image? (
+                        {emp.imageUrl ? (
                           <Image
-                            src={emp.Image}
+                            src={emp.imageUrl}
                             alt={emp.firstName}
                             width={40}
                             height={40}
                             className="rounded-full object-cover border"
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm">
-                            {emp.firstName[0]}
-                            {emp.lastName[0]}
+                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                            {emp.firstName[0]}{emp.lastName[0]}
                           </div>
                         )}
                       </TableCell>
@@ -226,23 +171,23 @@ export default function EmployeesPage() {
                       <TableCell>{emp.department}</TableCell>
                       <TableCell>{emp.designation || "—"}</TableCell>
                       <TableCell>₹{emp.salary.toLocaleString("en-IN")}</TableCell>
-                      <TableCell>{emp.attendancePercentage || 0}%</TableCell>
+                      <TableCell>{emp.attendancePercentage ?? 0}%</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(emp.status)}>
                           <span className="mr-1.5 h-2 w-2 rounded-full bg-current" />
-                          {emp.status}
+                          {getStatusLabel(emp.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                        <Link href={`/employees/view?id=${emp.id}`}>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                           View
-                      </Button>
-                        </Link>
                           <Button variant="outline" size="sm" asChild>
-                            <Link href={`/employees/edit/${emp.id}`}>
+                            <Link href={`/employees/${emp.id}/view`}>
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/employees/${emp.id}/edit`}>
                               <Pencil className="h-4 w-4 mr-1" />
                               Edit
                             </Link>
@@ -254,10 +199,11 @@ export default function EmployeesPage() {
                 )}
               </TableBody>
             </Table>
-            {filteredEmployees.length > 10 && (
+
+            {filtered.length > 10 && (
               <div className="p-4 border-t text-center">
                 <Button variant="outline" onClick={() => setShowAll(!showAll)}>
-                  {showAll? "Show Less" : `Show All (${filteredEmployees.length})`}
+                  {showAll ? "Show Less" : `Show All (${filtered.length})`}
                 </Button>
               </div>
             )}
