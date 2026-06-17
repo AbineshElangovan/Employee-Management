@@ -64,7 +64,7 @@ export default function EmployeeViewPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        {/* <Header /> */}
+       
         <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -75,7 +75,7 @@ export default function EmployeeViewPage() {
   if (!employee) {
     return (
       <div className="min-h-screen bg-background">
-        {/* <Header /> */}
+      
         <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] gap-4">
           <p className="text-muted-foreground">Employee not found.</p>
           <Button variant="outline" onClick={() => router.push("/employees")}>
@@ -91,7 +91,6 @@ export default function EmployeeViewPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* <Header /> */}
       <main className="container mx-auto p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -165,7 +164,7 @@ export default function EmployeeViewPage() {
             </CardContent>
           </Card>
 
-          {/* Right cards */}
+       
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>

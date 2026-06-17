@@ -38,10 +38,10 @@ export async function GET() {
       .prepare(
         `SELECT
           ROUND(COALESCE(AVG(attendancePercentage), 0)) AS average,
-          COUNT(CASE WHEN attendancePercentage >= 90 THEN 1 END) AS excellent,
-          COUNT(CASE WHEN attendancePercentage >= 75 AND attendancePercentage < 90 THEN 1 END) AS good,
-          COUNT(CASE WHEN attendancePercentage >= 50 AND attendancePercentage < 75 THEN 1 END) AS averageCount,
-          COUNT(CASE WHEN attendancePercentage < 50 OR attendancePercentage IS NULL THEN 1 END) AS poor
+          COUNT(CASE WHEN attendancePercentage >= 90 THEN 1 END)                                        AS excellent,
+          COUNT(CASE WHEN attendancePercentage >= 75 AND attendancePercentage < 90 THEN 1 END)          AS good,
+          COUNT(CASE WHEN attendancePercentage >= 50 AND attendancePercentage < 75 THEN 1 END)          AS averageCount,
+          COUNT(CASE WHEN attendancePercentage < 50  OR  attendancePercentage IS NULL THEN 1 END)       AS poor
         FROM employees`
       )
       .get() as AttendanceStats

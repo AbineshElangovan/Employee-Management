@@ -163,7 +163,6 @@ export default function EmployeesPage() {
                   <TableHead>Employee ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Department</TableHead>
-                  <TableHead>Designation</TableHead>
                   <TableHead>Salary</TableHead>
                   <TableHead>Attendance</TableHead>
                   <TableHead>Status</TableHead>
@@ -201,7 +200,6 @@ export default function EmployeesPage() {
                         {emp.firstName} {emp.lastName}
                       </TableCell>
                       <TableCell>{emp.department}</TableCell>
-                      <TableCell>{emp.designation || "—"}</TableCell>
                       <TableCell>₹{emp.salary.toLocaleString("en-IN")}</TableCell>
                       <TableCell>{emp.attendancePercentage ?? 0}%</TableCell>
                       <TableCell>

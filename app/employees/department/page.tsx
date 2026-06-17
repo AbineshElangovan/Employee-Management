@@ -1,12 +1,12 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Building2, Users, IndianRupee,
-  TrendingUp, TrendingDown, Clock,
+  TrendingUp, TrendingDown, Clock, Loader2,
 } from "lucide-react"
-import db from "@/lib/db"
-
-// ✅ ISR: revalidate every 1 hour — works here because this is a Server Component
-export const revalidate = 60
+import { toast } from "sonner"
 
 type Department = {
   department: string
@@ -20,6 +20,11 @@ type Stats = {
   highestSalary: number
   lowestSalary: number
   averageAttendance: number
+}
+
+type DepartmentsResponse = {
+  departments: Department[]
+  stats: Stats
 }
 
 const ANALYTICS_CARDS = [
@@ -60,55 +65,48 @@ const ANALYTICS_CARDS = [
   },
 ]
 
-// ✅ Data fetching directly in the server component — no API round-trip needed
-async function getDepartmentAnalytics(): Promise<{
-  departments: Department[]
-  stats: Stats
-}> {
-  const departments = db
-    .prepare(`
-      SELECT
-        e1.department,
-        COUNT(*) AS employeeCount,
-        (
-          SELECT firstName || ' ' || lastName
-          FROM employees e2
-          WHERE e2.department = e1.department
-            AND e2.salary IS NOT NULL
-          ORDER BY e2.salary DESC
-          LIMIT 1
-        ) AS headName
-      FROM employees e1
-      GROUP BY e1.department
-      ORDER BY e1.department
-    `)
-    .all() as Department[]
+export default function DepartmentPage() {
+  const [data, setData] = useState<DepartmentsResponse | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const rawStats = db
-    .prepare(`
-      SELECT
-        COALESCE(SUM(salary), 0)               AS totalSalary,
-        COALESCE(AVG(salary), 0)               AS averageSalary,
-        COALESCE(MAX(salary), 0)               AS highestSalary,
-        COALESCE(MIN(salary), 0)               AS lowestSalary,
-        COALESCE(AVG(attendancePercentage), 0) AS averageAttendance
-      FROM employees
-    `)
-    .get() as Stats | undefined
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await fetch("/api/department")
+        if (!res.ok) {
+          const body = await res.text().catch(() => "")
+          throw new Error(`Request failed: ${res.status} ${res.statusText} — ${body}`)
+        }
+        const json = await res.json()
+        setData(json)
+      } catch (error) {
+        toast.error("Failed to load department analytics")
+        console.error(error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const stats = rawStats ?? {
-    totalSalary: 0,
-    averageSalary: 0,
-    highestSalary: 0,
-    lowestSalary: 0,
-    averageAttendance: 0,
+    fetchDepartments()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
-  return { departments, stats }
-}
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center text-muted-foreground">
+        Unable to load department analytics.
+      </div>
+    )
+  }
 
-export default async function DepartmentPage() {
-  const { departments, stats } = await getDepartmentAnalytics()
+  const { departments, stats } = data
 
   return (
     <div className="min-h-screen bg-muted/30">

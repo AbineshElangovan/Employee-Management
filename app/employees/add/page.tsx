@@ -11,8 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/forms"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Sparkles, Upload, X } from "lucide-react"
-import { Header } from "@/components/header"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Spinner } from "@/components/ui/spinner"
 import { createEmployee } from "@/lib/db-actions"
@@ -41,6 +40,7 @@ export default function AddEmployeePage() {
   const { addEmployee } = useEmployeeStore()
   const [imagePreview, setImagePreview] = useState<string>("")
   const [loading, setLoading] = useState(false)
+  const [idLoading, setIdLoading] = useState(true)
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
@@ -54,13 +54,27 @@ export default function AddEmployeePage() {
       employeeId: "",
       department: "",
       designation: "",
-      joiningDate: new Date().toISOString().split('T')[0],
+      joiningDate: new Date().toISOString().split("T")[0],
       salary: 0,
       imageUrl: "",
       status: "active",
       attendancePercentage: 0,
     },
   })
+
+
+  useEffect(() => {
+    setIdLoading(true)
+    fetch("/api/employee/next-id")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.employeeId) {
+          form.setValue("employeeId", data.employeeId)
+        }
+      })
+      .catch(() => toast.error("Could not generate Employee ID"))
+      .finally(() => setIdLoading(false))
+  }, [form])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -96,7 +110,6 @@ export default function AddEmployeePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* <Header /> */}
       <div className="text-foreground p-8">
         <div className="max-w-6xl mx-auto">
           <Link href="/employees" className="inline-flex items-center text-sm text-primary hover:text-primary/80 mb-4">
@@ -105,25 +118,33 @@ export default function AddEmployeePage() {
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Add New Employee</h1>
-          <p className="text-muted-foreground mb-6">Create and initialize a secure digital record for new personnel entry.</p>
+          <p className="text-muted-foreground mb-6">
+            Create and initialize a secure digital record for new personnel entry.
+          </p>
 
           <div className="mb-6 rounded-lg border border-primary/40 bg-primary/10 p-4">
             <div className="flex items-center gap-2 text-primary">
               <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-medium">Form Validator Active: Input real-time evaluation rules applied down below.</span>
+              <span className="text-sm font-medium">
+                Form Validator Active: Input real-time evaluation rules applied down below.
+              </span>
             </div>
           </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Personal Details */}
                 <div className="rounded-lg border bg-card p-6">
                   <h2 className="text-lg font-semibold text-primary mb-5">1. PERSONAL DETAILS</h2>
 
                   <FormField control={form.control} name="firstName" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>First Name</FormLabel>
-                      <FormControl><Input placeholder="John" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl>
+                        <Input placeholder="John" className={fieldState.error ? "border-destructive" : ""} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -131,7 +152,9 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="lastName" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Last Name</FormLabel>
-                      <FormControl><Input placeholder="Doe" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl>
+                        <Input placeholder="Doe" className={fieldState.error ? "border-destructive" : ""} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -139,7 +162,9 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="email" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Email Address</FormLabel>
-                      <FormControl><Input type="email" placeholder="john@gmail.com" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl>
+                        <Input type="email" placeholder="john@gmail.com" className={fieldState.error ? "border-destructive" : ""} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -147,7 +172,9 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="phone" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Phone Number</FormLabel>
-                      <FormControl><Input placeholder="9876543210" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl>
+                        <Input placeholder="9876543210" className={fieldState.error ? "border-destructive" : ""} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -155,19 +182,44 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="address" render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Home Address</FormLabel>
-                      <FormControl><Input placeholder="Chennai, Tamil Nadu" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl>
+                        <Input placeholder="Chennai, Tamil Nadu" className={fieldState.error ? "border-destructive" : ""} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                 </div>
 
+                {/* Employment Parameters */}
                 <div className="rounded-lg border bg-card p-6">
                   <h2 className="text-lg font-semibold text-primary mb-5">2. EMPLOYMENT PARAMETERS</h2>
 
+                  {/* Auto-generated Employee ID */}
                   <FormField control={form.control} name="employeeId" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
-                      <FormLabel>Employee ID (Unique Key)</FormLabel>
-                      <FormControl><Input placeholder="EMP120" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormLabel className="flex items-center gap-2">
+                        Employee ID
+                        <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                          Auto Generated
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            placeholder="EMP022"
+                            readOnly
+                            className={`bg-muted cursor-not-allowed font-mono tracking-wider ${
+                              fieldState.error ? "border-destructive" : ""
+                            }`}
+                            {...field}
+                          />
+                          {idLoading && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <Spinner className="h-4 w-4" />
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -177,7 +229,7 @@ export default function AddEmployeePage() {
                       <FormLabel>Assigned Corporate Department</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className={fieldState.error? "border-destructive" : ""}>
+                          <SelectTrigger className={fieldState.error ? "border-destructive" : ""}>
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
                         </FormControl>
@@ -188,8 +240,20 @@ export default function AddEmployeePage() {
                           <SelectItem value="Marketing">Marketing</SelectItem>
                           <SelectItem value="Finance">Finance</SelectItem>
                           <SelectItem value="Design">Design</SelectItem>
+                          <SelectItem value="IT">IT</SelectItem>
+                          <SelectItem value="Cyber Security">Cyber Security</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="designation" render={({ field, fieldState }) => (
+                    <FormItem className="mb-4">
+                      <FormLabel>Designation <span className="text-muted-foreground text-xs">(Optional)</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="Software Engineer" className={fieldState.error ? "border-destructive" : ""} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -197,7 +261,9 @@ export default function AddEmployeePage() {
                   <FormField control={form.control} name="joiningDate" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Official Joining Date</FormLabel>
-                      <FormControl><Input type="date" className={fieldState.error? "border-destructive" : ""} {...field} /></FormControl>
+                      <FormControl>
+                        <Input type="date" className={fieldState.error ? "border-destructive" : ""} {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -210,12 +276,12 @@ export default function AddEmployeePage() {
                           type="text"
                           inputMode="numeric"
                           placeholder="50000"
-                          className={fieldState.error? "border-destructive" : ""}
+                          className={fieldState.error ? "border-destructive" : ""}
                           {...field}
                           value={field.value || ""}
                           onChange={(e) => {
                             const val = e.target.value.replace(/[^0-9]/g, "")
-                            field.onChange(val? Number(val) : 0)
+                            field.onChange(val ? Number(val) : 0)
                           }}
                         />
                       </FormControl>
@@ -225,6 +291,7 @@ export default function AddEmployeePage() {
                 </div>
               </div>
 
+              {/* Profile Context Details */}
               <div className="rounded-lg border bg-card p-6">
                 <h2 className="text-lg font-semibold text-primary mb-5">3. PROFILE CONTEXT DETAILS</h2>
 
@@ -234,7 +301,7 @@ export default function AddEmployeePage() {
                       <FormLabel>Profile Image</FormLabel>
                       <FormControl>
                         <div className="space-y-3">
-                          {imagePreview? (
+                          {imagePreview ? (
                             <div className="relative w-32 h-32">
                               <Image
                                 src={imagePreview}
@@ -243,15 +310,30 @@ export default function AddEmployeePage() {
                                 height={128}
                                 className="object-cover rounded-lg border"
                               />
-                              <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={removeImage}>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                onClick={removeImage}
+                              >
                                 <X className="h-3 w-3" />
                               </Button>
                             </div>
                           ) : (
-                            <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 border-border">
+                            <label
+                              htmlFor="image-upload"
+                              className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 border-border"
+                            >
                               <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                               <span className="text-xs text-muted-foreground">Upload</span>
-                              <input id="image-upload" type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                              <input
+                                id="image-upload"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleImageUpload}
+                              />
                             </label>
                           )}
                         </div>
@@ -265,7 +347,7 @@ export default function AddEmployeePage() {
                       <FormLabel>Operational Status Badge</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className={fieldState.error? "border-destructive" : ""}>
+                          <SelectTrigger className={fieldState.error ? "border-destructive" : ""}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -287,12 +369,12 @@ export default function AddEmployeePage() {
                           type="text"
                           inputMode="numeric"
                           placeholder="85"
-                          className={fieldState.error? "border-destructive" : ""}
+                          className={fieldState.error ? "border-destructive" : ""}
                           {...field}
                           value={field.value || ""}
                           onChange={(e) => {
                             const val = e.target.value.replace(/[^0-9]/g, "")
-                            field.onChange(val? Number(val) : 0)
+                            field.onChange(val ? Number(val) : 0)
                           }}
                         />
                       </FormControl>
@@ -303,10 +385,12 @@ export default function AddEmployeePage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => router.back()}>Cancel Process</Button>
-                <Button type="submit" disabled={loading}>
+                <Button type="button" variant="outline" onClick={() => router.back()}>
+                  Cancel Process
+                </Button>
+                <Button type="submit" disabled={loading || idLoading}>
                   {loading && <Spinner className="mr-2" />}
-                  {loading? "Adding..." : "Add Employee"}
+                  {loading ? "Adding..." : "Add Employee"}
                 </Button>
               </div>
             </form>

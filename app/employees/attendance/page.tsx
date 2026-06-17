@@ -1,102 +1,161 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
 import {
-  Loader2, ArrowLeft, Mail, Phone, MapPin,
-  Briefcase, Building2, Calendar, IndianRupee,
-  IdCard, Activity, Trash2, Pencil,
+  Loader2,
+  ArrowLeft,
+  Users,
+  TrendingUp,
+  TrendingDown,
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  MinusCircle,
 } from "lucide-react"
 import { toast } from "sonner"
-import { useEmployeeStore } from "@/app/store/EmployeeStore"
 
-type Employee = {
+interface Employee {
   id: string
-  employeeId: string
   firstName: string
   lastName: string
-  email: string
-  phone?: string
-  address?: string
+  employeeId: string
   department: string
-  designation?: string
-  salary: number
-  joiningDate?: string
-  attendancePercentage?: number
-  status: string
-  imageUrl?: string
-  updatedAt?: string
+  attendancePercentage: number
 }
 
-const STATUS_CONFIG: Record<string, { label: string; className: string; dot: string }> = {
-  active:   { label: "Active",   className: "bg-emerald-500/20 text-emerald-500 border-emerald-500/30", dot: "bg-emerald-500" },
-  on_leave: { label: "On Leave", className: "bg-amber-500/20  text-amber-500  border-amber-500/30",  dot: "bg-amber-500"  },
-  inactive: { label: "Inactive", className: "bg-red-500/20    text-red-500    border-red-500/30",    dot: "bg-red-500"    },
+interface AttendanceStats {
+  average: number
+  excellent: number
+  good: number
+  averageCount: number
+  poor: number
 }
 
-function getStatusBadge(status: string) {
-  return STATUS_CONFIG[status] ?? STATUS_CONFIG.inactive
+interface AttendanceData {
+  employees: Employee[]
+  stats: AttendanceStats
 }
 
-export default function EmployeeViewPage() {
-  const params   = useParams()
-  const router   = useRouter()
-  const id       = params?.id as string
+function getAttendanceBadge(percentage: number) {
+  if (percentage >= 90)
+    return {
+      label: "Excellent",
+      className: "bg-emerald-500/20 text-emerald-500 border-emerald-500/30",
+      icon: CheckCircle2,
+    }
+  if (percentage >= 75)
+    return {
+      label: "Good",
+      className: "bg-blue-500/20 text-blue-500 border-blue-500/30",
+      icon: TrendingUp,
+    }
+  if (percentage >= 50)
+    return {
+      label: "Average",
+      className: "bg-amber-500/20 text-amber-500 border-amber-500/30",
+      icon: MinusCircle,
+    }
+  return {
+    label: "Poor",
+    className: "bg-red-500/20 text-red-500 border-red-500/30",
+    icon: XCircle,
+  }
+}
 
-  const { deleteEmployee: removeFromStore } = useEmployeeStore()
+function AttendanceBar({ percentage }: { percentage: number }) {
+  const color =
+    percentage >= 90
+      ? "bg-emerald-500"
+      : percentage >= 75
+      ? "bg-blue-500"
+      : percentage >= 50
+      ? "bg-amber-500"
+      : "bg-red-500"
 
-  const [employee, setEmployee] = useState<Employee | null>(null)
-  const [loading, setLoading]   = useState(true)
-  const [deleting, setDeleting] = useState(false)
+  return (
+    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+      <div
+        className={`h-full rounded-full transition-all duration-500 ${color}`}
+        style={{ width: `${Math.min(percentage, 100)}%` }}
+      />
+    </div>
+  )
+}
 
-  // Fetch employee from API route
+export default function AttendancePage() {
+  const router = useRouter()
+
+  const [data, setData] = useState<AttendanceData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+
   useEffect(() => {
-    if (!id) return
-    fetch(`/api/employees/${id}`)
+    setLoading(true)
+    setFetchError(null)
+
+    const controller = new AbortController()
+   const timeout = setTimeout(() => controller.abort(), 15000)
+
+    fetch("/api/attendance", { signal: controller.signal })
       .then((res) => {
-        if (!res.ok) throw new Error("Not found")
+        if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`)
         return res.json()
       })
-      .then(setEmployee)
-      .catch(() => toast.error("Failed to load employee"))
-      .finally(() => setLoading(false))
-  }, [id])
+      .then((json: AttendanceData) => {
+        setData(json)
+      })
+      .catch((err: Error) => {
+        if (err.name === "AbortError") {
+          setFetchError("Request timed out. Please try again.")
+          toast.error("Request timed out.")
+        } else {
+          setFetchError(err.message)
+          toast.error("Failed to load attendance data.")
+        }
+      })
+      .finally(() => {
+        clearTimeout(timeout)
+        setLoading(false)
+      })
 
-  // Delete via API route
-  const handleDelete = async () => {
-    if (!employee) return
-    if (!confirm(`Delete ${employee.firstName} ${employee.lastName}? This cannot be undone.`)) return
-
-    setDeleting(true)
-    try {
-      const res = await fetch(`/api/employees/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Delete failed")
-      removeFromStore(id)
-      toast.success("Employee deleted")
-      router.push("/employees")
-    } catch {
-      toast.error("Failed to delete employee")
-      setDeleting(false)
+    return () => {
+      clearTimeout(timeout)
+      controller.abort()
     }
-  }
+  }, [])
 
+  const filtered = data?.employees.filter((emp) => {
+    const q = search.toLowerCase()
+    return (
+      emp.firstName.toLowerCase().includes(q) ||
+      emp.lastName.toLowerCase().includes(q) ||
+      emp.employeeId.toLowerCase().includes(q) ||
+      emp.department.toLowerCase().includes(q)
+    )
+  })
+
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }
 
-  if (!employee) {
+
+  if (fetchError || !data) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">Employee not found.</p>
+        <AlertCircle className="h-10 w-10 text-destructive" />
+        <p className="text-muted-foreground">{fetchError ?? "No attendance data found."}</p>
         <Button variant="outline" onClick={() => router.push("/employees")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Employees
@@ -105,171 +164,137 @@ export default function EmployeeViewPage() {
     )
   }
 
-  const badge = getStatusBadge(employee.status)
+  const { stats, employees } = data
 
+  // ── Page ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto p-4 md:p-6 space-y-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold">Employee Profile</h1>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Attendance Overview</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {employees.length} employee{employees.length !== 1 ? "s" : ""} tracked
+            </p>
+          </div>
           <Button variant="outline" size="sm" onClick={() => router.push("/employees")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-
-          {/* Left — identity card */}
-          <Card className="lg:col-span-1">
-            <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
-              <div className="h-40 w-40 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
-                {employee.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={employee.imageUrl}
-                    alt={`${employee.firstName} ${employee.lastName}`}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-4xl font-semibold text-muted-foreground">
-                    {employee.firstName[0]}{employee.lastName[0]}
-                  </span>
-                )}
-              </div>
-
-              <div>
-                <h2 className="text-xl font-bold">
-                  {employee.firstName} {employee.lastName}
-                </h2>
-                <p className="text-sm text-muted-foreground">{employee.designation || "—"}</p>
-              </div>
-
-              <Badge className={`gap-1.5 ${badge.className}`}>
-                <span className={`h-2 w-2 rounded-full ${badge.dot}`} />
-                {badge.label}
-              </Badge>
-
-              <Separator />
-
-              <div className="w-full space-y-3 text-left">
-                <div className="flex items-center gap-3 text-sm">
-                  <IdCard className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="text-muted-foreground">Employee ID</span>
-                  <span className="ml-auto font-medium">{employee.employeeId}</span>
+        {/* Stats Cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Card className="lg:col-span-1 sm:col-span-2">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="truncate">{employee.email}</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">Company Average</p>
+                  <p className="text-2xl font-bold">{stats.average}%</p>
                 </div>
-                {employee.phone && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span>{employee.phone}</span>
-                  </div>
-                )}
-                {employee.address && (
-                  <div className="flex items-start gap-3 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <span>{employee.address}</span>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Right — details */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Professional Details</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div className="flex items-center gap-3 text-sm">
-                  <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+          {[
+            { label: "Excellent", count: stats.excellent, color: "text-emerald-500", bg: "bg-emerald-500/10", icon: CheckCircle2 },
+            { label: "Good",      count: stats.good,      color: "text-blue-500",    bg: "bg-blue-500/10",    icon: TrendingUp   },
+            { label: "Average",   count: stats.averageCount, color: "text-amber-500", bg: "bg-amber-500/10", icon: MinusCircle  },
+            { label: "Poor",      count: stats.poor,      color: "text-red-500",     bg: "bg-red-500/10",     icon: XCircle      },
+          ].map(({ label, count, color, bg, icon: Icon }) => (
+            <Card key={label}>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className={`h-10 w-10 rounded-lg ${bg} flex items-center justify-center`}>
+                    <Icon className={`h-5 w-5 ${color}`} />
+                  </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Department</p>
-                    <p className="font-medium">{employee.department}</p>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="text-2xl font-bold">{count}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Briefcase className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div>
-                    <p className="text-muted-foreground text-xs">Designation</p>
-                    <p className="font-medium">{employee.designation || "—"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <IndianRupee className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div>
-                    <p className="text-muted-foreground text-xs">Salary (Monthly)</p>
-                    <p className="font-medium">₹{employee.salary?.toLocaleString("en-IN")}</p>
-                  </div>
-                </div>
-                {employee.joiningDate && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div>
-                      <p className="text-muted-foreground text-xs">Joining Date</p>
-                      <p className="font-medium">
-                        {new Date(employee.joiningDate).toLocaleDateString("en-GB", {
-                          day: "2-digit", month: "short", year: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Status &amp; Performance</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div className="flex items-center gap-3 text-sm">
-                  <Activity className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div>
-                    <p className="text-muted-foreground text-xs">Attendance</p>
-                    <p className="font-medium">{employee.attendancePercentage ?? 0}% (Monthly Avg)</p>
-                  </div>
-                </div>
-                {employee.updatedAt && (
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div>
-                      <p className="text-muted-foreground text-xs">Last Updated</p>
-                      <p className="font-medium">
-                        {new Date(employee.updatedAt).toLocaleDateString("en-GB", {
-                          day: "2-digit", month: "short", year: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-between">
-              <Button variant="outline" asChild>
-                <Link href={`/employees/${id}/edit`}>
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit Employee
-                </Link>
-              </Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-                {deleting
-                  ? <Loader2 className="h-4 w-8 mr-2 animate-spin" />
-                  : <Trash2 className="h-4 w-4 mr-2" />
-                }
-                Delete Employee
-              </Button>
-            </div>
-          </div>
-
+          ))}
         </div>
+
+        {/* Employee Table */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              Employee Attendance
+            </CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, ID, department…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {filtered && filtered.length > 0 ? (
+              <div className="divide-y divide-border">
+                {filtered.map((emp) => {
+                  const badge = getAttendanceBadge(emp.attendancePercentage)
+                  const Icon = badge.icon
+                  return (
+                    <div
+                      key={emp.id}
+                      className="flex items-center gap-4 px-6 py-4 hover:bg-muted/40 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/employees/${emp.id}`)}
+                    >
+                      {/* Avatar */}
+                      <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-semibold text-muted-foreground">
+                        {emp.firstName[0]}{emp.lastName[0]}
+                      </div>
+
+                      {/* Name + dept */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {emp.firstName} {emp.lastName}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {emp.employeeId} · {emp.department}
+                        </p>
+                      </div>
+
+                      {/* Bar */}
+                      <div className="hidden sm:flex flex-col gap-1 w-32">
+                        <AttendanceBar percentage={emp.attendancePercentage} />
+                        <p className="text-xs text-muted-foreground text-right">
+                          {emp.attendancePercentage}%
+                        </p>
+                      </div>
+
+                      {/* Badge */}
+                      <Badge className={`gap-1.5 shrink-0 ${badge.className}`}>
+                        <Icon className="h-3 w-3" />
+                        {badge.label}
+                      </Badge>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                <TrendingDown className="h-8 w-8" />
+                <p className="text-sm">
+                  {search ? "No employees match your search." : "No attendance data available."}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
       </main>
     </div>
   )

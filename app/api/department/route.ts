@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
 import db from "@/lib/db"
 
-// ❌ No revalidate here — Route Handlers don't support it
-// If you need caching on this route, use Next.js fetch cache on the consumer side:
-// fetch("/api/departments", { next: { revalidate: 3600 } })
-
 type Department = {
   department: string
   employeeCount: number
