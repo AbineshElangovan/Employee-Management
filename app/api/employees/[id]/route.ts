@@ -3,21 +3,23 @@ import db from "@/lib/db"
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const employee = db.prepare("SELECT * FROM employees WHERE id = ?").get(params.id) as any
+    const { id } = await params
+
+    const employee = db
+      .prepare("SELECT * FROM employees WHERE id = ?")
+      .get(id) as any
 
     if (!employee) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
-   
     if (employee.status) {
       employee.status = employee.status.toLowerCase().replace(/\s+/g, "_")
     }
 
-   
     if (!employee.imageUrl && employee.Image) {
       employee.imageUrl = employee.Image
     }
@@ -31,9 +33,10 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await req.json()
 
     db.prepare(`
@@ -61,10 +64,13 @@ export async function PUT(
       body.status,
       body.address ?? null,
       body.attendancePercentage ?? 0,
-      params.id
+      id
     )
 
-    const updated = db.prepare("SELECT * FROM employees WHERE id = ?").get(params.id)
+    const updated = db
+      .prepare("SELECT * FROM employees WHERE id = ?")
+      .get(id)
+
     return NextResponse.json(updated)
   } catch (error) {
     console.error("PUT employee error:", error)
@@ -74,10 +80,13 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    db.prepare("DELETE FROM employees WHERE id = ?").run(params.id)
+    const { id } = await params
+
+    db.prepare("DELETE FROM employees WHERE id = ?").run(id)
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("DELETE employee error:", error)

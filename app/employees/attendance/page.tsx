@@ -96,40 +96,46 @@ export default function AttendancePage() {
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
 
-  useEffect(() => {
-    setLoading(true)
-    setFetchError(null)
+useEffect(() => {
+  setLoading(true)
+  setFetchError(null)
 
-    const controller = new AbortController()
-   const timeout = setTimeout(() => controller.abort(), 15000)
+  const controller = new AbortController()
 
-    fetch("/api/attendance", { signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`)
-        return res.json()
-      })
-      .then((json: AttendanceData) => {
-        setData(json)
-      })
-      .catch((err: Error) => {
-        if (err.name === "AbortError") {
-          setFetchError("Request timed out. Please try again.")
-          toast.error("Request timed out.")
-        } else {
-          setFetchError(err.message)
-          toast.error("Failed to load attendance data.")
-        }
-      })
-      .finally(() => {
-        clearTimeout(timeout)
-        setLoading(false)
-      })
+  const timeout = setTimeout(() => {
+    controller.abort()
+  }, 15000)
 
-    return () => {
+  fetch("/api/attendance", {
+    signal: controller.signal,
+  })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status} ${res.statusText}`)
+      }
+      return res.json()
+    })
+    .then((json: AttendanceData) => {
+      setData(json)
+    })
+    .catch((err: Error) => {
+      if (err.name === "AbortError") {
+        return
+      }
+
+      setFetchError(err.message)
+      toast.error("Failed to load attendance data.")
+    })
+    .finally(() => {
       clearTimeout(timeout)
-      controller.abort()
-    }
-  }, [])
+      setLoading(false)
+    })
+
+  return () => {
+    clearTimeout(timeout)
+    controller.abort()
+  }
+}, [])
 
   const filtered = data?.employees.filter((emp) => {
     const q = search.toLowerCase()

@@ -21,7 +21,7 @@ const employeeSchema = z.object({
   firstName: z.string().min(3, "First Name must contain at least 3 characters"),
   lastName: z.string().min(1, "Last Name is required"),
   email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be valid"),
+  phone: z.string().max(10, "Phone number must be valid").min(10, "Phone number must be valid"),
   address: z.string().min(5, "Home Address is required"),
   employeeId: z.string().min(1, "Employee ID is required"),
   department: z.string().min(1, "Department is required"),

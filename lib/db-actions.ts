@@ -1,8 +1,7 @@
 "use server"
 
-import db from "@/lib/db"
+import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { nanoid } from "nanoid"
 
 export type Employee = {
   id: string
@@ -24,105 +23,132 @@ export type Employee = {
 }
 
 export async function getEmployees(): Promise<Employee[]> {
-  const employees = db.prepare(`
-    SELECT * FROM employees ORDER BY createdAt DESC
-  `).all() as Employee[]
-  return employees
+  const employees = await prisma.employee.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+
+  return employees.map((emp) => ({
+    ...emp,
+    joiningDate: emp.joiningDate.toISOString(),
+    createdAt: emp.createdAt.toISOString(),
+    updatedAt: emp.updatedAt.toISOString(),
+  }))
 }
 
 export async function getEmployee(id: string): Promise<Employee | null> {
-  const employee = db.prepare(`
-    SELECT * FROM employees WHERE id = ?
-  `).get(id) as Employee | undefined
-  return employee || null
-}
+  const employee = await prisma.employee.findUnique({
+    where: { id },
+  })
 
-export async function createEmployee(data: Omit<Employee, "id" | "createdAt" | "updatedAt">) {
-  try {
-    const id = nanoid()
-    db.prepare(`
-      INSERT INTO employees (
-        id, employeeId, firstName, lastName, email, phone, department,
-        designation, salary, status, attendancePercentage, address,
-        joiningDate, imageUrl, createdAt, updatedAt
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    `).run(
-      id,
-      data.employeeId,
-      data.firstName,
-      data.lastName,
-      data.email,
-      data.phone,
-      data.department,
-      data.designation || null,
-      data.salary,
-      data.status,
-      data.attendancePercentage || 0,
-      data.address,
-      data.joiningDate,
-      data.imageUrl || null
-    )
+  if (!employee) return null
 
-    const newEmployee = db.prepare("SELECT * FROM employees WHERE id = ?").get(id) as Employee
-    revalidatePath("/employees")
-    return { success: true, data: { ...newEmployee } }
-  } catch (error: any) {
-    console.error("createEmployee error:", error)
-    return { success: false, error: error.message }
+  return {
+    ...employee,
+    joiningDate: employee.joiningDate.toISOString(),
+    createdAt: employee.createdAt.toISOString(),
+    updatedAt: employee.updatedAt.toISOString(),
   }
 }
 
-export async function updateEmployee(id: string, data: Partial<Employee>) {
+export async function createEmployee(
+  data: Omit<Employee, "id" | "createdAt" | "updatedAt">
+) {
   try {
-    db.prepare(`
-      UPDATE employees SET
-        firstName = ?,
-        lastName = ?,
-        email = ?,
-        phone = ?,
-        department = ?,
-        designation = ?,
-        salary = ?,
-        status = ?,
-        attendancePercentage = ?,
-        address = ?,
-        joiningDate = ?,
-        imageUrl = ?,
-        updatedAt = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(
-      data.firstName,
-      data.lastName,
-      data.email,
-      data.phone ?? null,
-      data.department,
-      data.designation ?? null,
-      data.salary,
-      data.status,
-      data.attendancePercentage ?? 0,
-      data.address,
-      data.joiningDate,
-      data.imageUrl ?? null,
-      id
-    )
+    const employee = await prisma.employee.create({
+      data: {
+        employeeId: data.employeeId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        department: data.department,
+        designation: data.designation,
+        salary: data.salary,
+        status: data.status,
+        attendancePercentage: data.attendancePercentage ?? 0,
+        address: data.address,
+        joiningDate: new Date(data.joiningDate),
+        imageUrl: data.imageUrl,
+      },
+    })
 
-    const updated = db.prepare("SELECT * FROM employees WHERE id = ?").get(id) as Employee
+    revalidatePath("/employees")
+
+    return {
+      success: true,
+      data: employee,
+    }
+  } catch (error: any) {
+    console.error("createEmployee error:", error)
+
+    return {
+      success: false,
+      error: error.message,
+    }
+  }
+}
+
+export async function updateEmployee(
+  id: string,
+  data: Partial<Employee>
+) {
+  try {
+    const employee = await prisma.employee.update({
+      where: { id },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        department: data.department,
+        designation: data.designation,
+        salary: data.salary,
+        status: data.status,
+        attendancePercentage: data.attendancePercentage,
+        address: data.address,
+        joiningDate: data.joiningDate
+          ? new Date(data.joiningDate)
+          : undefined,
+        imageUrl: data.imageUrl,
+      },
+    })
+
     revalidatePath("/employees")
     revalidatePath(`/employees/${id}/view`)
-    return { success: true, data: { ...updated } }
+
+    return {
+      success: true,
+      data: employee,
+    }
   } catch (error: any) {
     console.error("updateEmployee error:", error)
-    return { success: false, error: error.message }
+
+    return {
+      success: false,
+      error: error.message,
+    }
   }
 }
 
 export async function deleteEmployee(id: string) {
   try {
-    db.prepare("DELETE FROM employees WHERE id = ?").run(id)
+    await prisma.employee.delete({
+      where: { id },
+    })
+
     revalidatePath("/employees")
-    return { success: true }
+
+    return {
+      success: true,
+    }
   } catch (error: any) {
     console.error("deleteEmployee error:", error)
-    return { success: false, error: error.message }
+
+    return {
+      success: false,
+      error: error.message,
+    }
   }
 }
