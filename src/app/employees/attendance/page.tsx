@@ -6,18 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/ca
 import { Button } from "@/src/components/ui/button"
 import { Badge } from "@/src/components/ui/badge"
 import { Input } from "@/src/components/ui/input"
-import {
-  Loader2,
-  ArrowLeft,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  MinusCircle,
-} from "lucide-react"
+import {Loader2,ArrowLeft,Users,TrendingUp,TrendingDown,Search,CheckCircle2,AlertCircle,XCircle,MinusCircle,} from "lucide-react"
 import { toast } from "sonner"
 
 interface Employee {

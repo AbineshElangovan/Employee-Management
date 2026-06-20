@@ -10,20 +10,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {Pagination,PaginationContent,PaginationEllipsis,PaginationItem,PaginationLink,PaginationNext,PaginationPrevious,} from "@/src/components/ui/pagination"
 import { ArrowLeft, Pencil, Search, Eye, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import type { Employee } from "@/src/app/types/employee"
 
-type Employee = {
-  id: string
-  employeeId: string
-  firstName: string
-  lastName: string
-  email: string
-  department: string
-  designation?: string
-  salary: number
-  attendancePercentage?: number
-  status: string
-  imageUrl?: string
-}
+// type Employee = {
+//   id: string
+//   employeeId: string
+//   firstName: string
+//   lastName: string
+//   email: string
+//   department: string
+//   designation?: string
+//   salary: number
+//   attendancePercentage?: number
+//   status: string
+//   imageUrl?: string
+// }
 
 const PAGE_SIZE = 10
 
@@ -94,12 +95,11 @@ export default function EmployeesPage() {
   const departments = [...new Set(employees.map((e) => e.department))]
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  // Keep currentPage in range if filters shrink the result set below it.
   const safePage = Math.min(currentPage, totalPages)
   const startIndex = (safePage - 1) * PAGE_SIZE
   const displayEmployees = filtered.slice(startIndex, startIndex + PAGE_SIZE)
 
-  // Reset to page 1 whenever search/filters change the result set.
+  
   const resetPage = () => setCurrentPage(1)
 
   const handleSearchChange = (value: string) => {

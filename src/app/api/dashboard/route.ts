@@ -20,7 +20,7 @@ export async function GET() {
 
     const recentEmployees = await prisma.employee.findMany({
       orderBy: { createdAt: "desc" },
-      take: 9,
+      take:11,
     })
 
     const total = totalEmployees || 1

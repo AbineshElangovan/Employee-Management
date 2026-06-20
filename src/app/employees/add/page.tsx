@@ -17,6 +17,7 @@ import { Spinner } from "@/src/components/ui/spinner"
 import { createEmployee } from "@/src/lib/db-actions"
 import { useEmployeeStore } from "@/src/app/store/EmployeeStore"
 
+
 const employeeSchema = z.object({
   firstName: z.string().min(3, "First Name must contain at least 3 characters"),
   lastName: z.string().min(1, "Last Name is required"),
@@ -197,11 +198,8 @@ export default function AddEmployeePage() {
                   )} />
                 </div>
 
-                {/* Employment Parameters */}
                 <div className="rounded-lg border bg-card p-6">
                   <h2 className="text-lg font-semibold text-primary mb-5">2. EMPLOYMENT PARAMETERS</h2>
-
-                  {/* Auto-generated Employee ID */}
                   <FormField control={form.control} name="employeeId" render={({ field, fieldState }) => (
                     <FormItem className="mb-4">
                       <FormLabel className="flex items-center gap-2">
