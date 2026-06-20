@@ -1,6 +1,6 @@
 "use server"
 
-import prisma from "@/lib/prisma"
+import prisma from "@/src/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 
@@ -55,7 +55,7 @@ export async function createEmployee(
         attendancePercentage: data.attendancePercentage ?? 0,
         address: data.address,
         joiningDate: new Date(data.joiningDate),
-        imageUrl: data.imageUrl || null,
+        imageUrl: data.imageUrl || " ",
       },
     })
 
@@ -87,7 +87,7 @@ export async function updateEmployee(id: string, data: Partial<Employee>) {
         attendancePercentage: data.attendancePercentage ?? 0,
         address: data.address,
         joiningDate: data.joiningDate ? new Date(data.joiningDate) : undefined,
-        imageUrl: data.imageUrl ?? null,
+        imageUrl: data.imageUrl ?? " ",
       },
     })
 
