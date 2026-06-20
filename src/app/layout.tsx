@@ -3,8 +3,8 @@ import { Inter, Geist } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
-import { cn } from "@/lib/utils";
-import { Header } from "@/components/header"
+import { cn } from "@/src/lib/utils";
+import { Header } from "@/src/components/header"
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
