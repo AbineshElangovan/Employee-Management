@@ -5,14 +5,13 @@ import { useParams, useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/forms"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
+import { Button } from "@/src/components/ui/button"
+import { Input } from "@/src/components/ui/input"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/src/components/ui/forms"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
 import { Loader2, ArrowLeft, Save, Upload, X } from "lucide-react"
 import { toast } from "sonner"
-import Image from "next/image"
 
 const editSchema = z.object({
   employeeId: z.string().optional(),
@@ -31,6 +30,10 @@ const editSchema = z.object({
 })
 
 type EditForm = z.infer<typeof editSchema>
+
+// Keep this constant in sync with your actual API route folder name:
+// app/api/employees/[id]/route.ts  (plural "employees")
+const EMPLOYEE_API_BASE = "/api/employees"
 
 export default function EmployeeEditPage() {
   const params = useParams()
@@ -62,7 +65,7 @@ export default function EmployeeEditPage() {
 
   useEffect(() => {
     if (!id) return
-    fetch(`/api/employee/${id}`)
+    fetch(`${EMPLOYEE_API_BASE}/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Not found")
         return res.json()
@@ -83,7 +86,10 @@ export default function EmployeeEditPage() {
           attendancePercentage: data.attendancePercentage ?? 0,
           imageUrl: data.imageUrl || "",
         })
-        if (data.imageUrl) setImagePreview(data.imageUrl)
+        // Guard against null/undefined/empty imageUrl from Prisma
+        if (data.imageUrl && typeof data.imageUrl === "string") {
+          setImagePreview(data.imageUrl)
+        }
       })
       .catch(() => toast.error("Failed to load employee"))
       .finally(() => setLoading(false))
@@ -109,7 +115,7 @@ export default function EmployeeEditPage() {
   const onSubmit = async (values: EditForm) => {
     setSaving(true)
     try {
-      const res = await fetch(`/api/employee/${id}`, {
+      const res = await fetch(`${EMPLOYEE_API_BASE}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -372,12 +378,13 @@ export default function EmployeeEditPage() {
                           <div>
                             {imagePreview ? (
                               <div className="relative w-24 h-24">
-                                <Image
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
                                   src={imagePreview}
                                   alt="Preview"
                                   width={96}
                                   height={96}
-                                  className="object-cover rounded-lg border"
+                                  className="w-24 h-24 object-cover rounded-lg border"
                                 />
                                 <Button
                                   type="button"

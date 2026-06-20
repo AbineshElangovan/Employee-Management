@@ -41,10 +41,10 @@ export async function GET() {
 
     const stats = {
       totalSalary: aggregate._sum.salary ?? 0,
-      averageSalary: aggregate._avg.salary ?? 0,
+      averageSalary: Math.round(aggregate._avg.salary ?? 0),
       highestSalary: aggregate._max.salary ?? 0,
       lowestSalary: aggregate._min.salary ?? 0,
-      averageAttendance: aggregate._avg.attendancePercentage ?? 0,
+      averageAttendance: Math.round(aggregate._avg.attendancePercentage ?? 0),
     }
 
     return NextResponse.json({ departments, stats })

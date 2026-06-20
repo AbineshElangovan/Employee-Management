@@ -62,17 +62,24 @@ export default function AddEmployeePage() {
     },
   })
 
-
   useEffect(() => {
     setIdLoading(true)
-    fetch("/api/employee/next-id")
-      .then((res) => res.json())
+    fetch("/api/employees/next-id")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Request failed: ${res.status} ${res.statusText}`)
+        }
+        return res.json()
+      })
       .then((data) => {
         if (data.employeeId) {
           form.setValue("employeeId", data.employeeId)
         }
       })
-      .catch(() => toast.error("Could not generate Employee ID"))
+      .catch((err) => {
+        console.error("Next ID fetch failed:", err)
+        toast.error("Could not generate Employee ID")
+      })
       .finally(() => setIdLoading(false))
   }, [form])
 
@@ -291,7 +298,7 @@ export default function AddEmployeePage() {
                 </div>
               </div>
 
-              {/* Profile Context Details */}
+             
               <div className="rounded-lg border bg-card p-6">
                 <h2 className="text-lg font-semibold text-primary mb-5">3. PROFILE CONTEXT DETAILS</h2>
 

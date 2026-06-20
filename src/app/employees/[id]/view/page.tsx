@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
+import { Button } from "@/src/components/ui/button"
+import { Badge } from "@/src/components/ui/badge"
+import { Separator } from "@/src/components/ui/separator"
 import {Loader2, ArrowLeft, Mail, Phone, MapPin,Briefcase, Building2, Calendar, IndianRupee,IdCard, Activity, Trash2, Pencil,} from "lucide-react"
 import { toast } from "sonner"
-import { getEmployee, deleteEmployee, type Employee } from "@/lib/db-actions"
-import { useEmployeeStore } from "@/app/store/EmployeeStore"
+import { getEmployee, deleteEmployee, type Employee } from "@/src/lib/db-actions"
+import { useEmployeeStore } from "@/src/app/store/EmployeeStore"
 
 function getStatusBadge(status: string) {
   switch (status) {

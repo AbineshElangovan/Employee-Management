@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/src/components/ui/button"
 import { Input } from "@/src/components/ui/input"
 import { Badge } from "@/src/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
+import {Pagination,PaginationContent,PaginationEllipsis,PaginationItem,PaginationLink,PaginationNext,PaginationPrevious,} from "@/src/components/ui/pagination"
 import { ArrowLeft, Pencil, Search, Eye, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -25,10 +25,12 @@ type Employee = {
   imageUrl?: string
 }
 
+const PAGE_SIZE = 10
+
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
-  const [showAll, setShowAll] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [deptFilter, setDeptFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -90,7 +92,52 @@ export default function EmployeesPage() {
 
   const filtered = filteredEmployees()
   const departments = [...new Set(employees.map((e) => e.department))]
-  const displayEmployees = showAll ? filtered : filtered.slice(0, 10)
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  // Keep currentPage in range if filters shrink the result set below it.
+  const safePage = Math.min(currentPage, totalPages)
+  const startIndex = (safePage - 1) * PAGE_SIZE
+  const displayEmployees = filtered.slice(startIndex, startIndex + PAGE_SIZE)
+
+  // Reset to page 1 whenever search/filters change the result set.
+  const resetPage = () => setCurrentPage(1)
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
+    resetPage()
+  }
+
+  const handleDeptChange = (value: string) => {
+    setDeptFilter(value ?? "all")
+    resetPage()
+  }
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value)
+    resetPage()
+  }
+
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return
+    setCurrentPage(page)
+  }
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = []
+    const addPage = (p: number) => {
+      if (!pages.includes(p)) pages.push(p)
+    }
+
+    addPage(1)
+    if (safePage > 3) pages.push("ellipsis")
+    for (let p = safePage - 1; p <= safePage + 1; p++) {
+      if (p > 1 && p < totalPages) addPage(p)
+    }
+    if (safePage < totalPages - 2) pages.push("ellipsis")
+    if (totalPages > 1) addPage(totalPages)
+
+    return pages
+  }
 
   if (loading) {
     return (
@@ -122,11 +169,11 @@ export default function EmployeesPage() {
                 <Input
                   placeholder="Search..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-9"
                 />
               </div>
-              <Select value={deptFilter} onValueChange={(val) => setDeptFilter(val ?? "all")}>
+              <Select value={deptFilter} onValueChange={handleDeptChange}>
                 <SelectTrigger className="w-35">
                   <SelectValue placeholder="Dept" />
                 </SelectTrigger>
@@ -147,7 +194,7 @@ export default function EmployeesPage() {
                   key={s}
                   variant={statusFilter === s ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter(s)}
+                  onClick={() => handleStatusChange(s)}
                 >
                   {s === "all" ? "All Employees" : getStatusLabel(s)}
                 </Button>
@@ -172,7 +219,7 @@ export default function EmployeesPage() {
               <TableBody>
                 {displayEmployees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       No employees found.
                     </TableCell>
                   </TableRow>
@@ -181,12 +228,13 @@ export default function EmployeesPage() {
                     <TableRow key={emp.id}>
                       <TableCell>
                         {emp.imageUrl ? (
-                          <Image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
                             src={emp.imageUrl}
                             alt={emp.firstName}
                             width={40}
                             height={40}
-                            className="rounded-full object-cover border"
+                            className="h-10 w-10 rounded-full object-cover border"
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
@@ -230,11 +278,58 @@ export default function EmployeesPage() {
               </TableBody>
             </Table>
 
-            {filtered.length > 10 && (
-              <div className="p-4 border-t text-center">
-                <Button variant="outline" onClick={() => setShowAll(!showAll)}>
-                  {showAll ? "Show Less" : `Show All (${filtered.length})`}
-                </Button>
+            {filtered.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}–{Math.min(startIndex + PAGE_SIZE, filtered.length)} of{" "}
+                  {filtered.length}
+                </p>
+
+                <Pagination className="mx-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          goToPage(safePage - 1)
+                        }}
+                        className={safePage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+
+                    {getPageNumbers().map((p, idx) =>
+                      p === "ellipsis" ? (
+                        <PaginationItem key={`ellipsis-${idx}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      ) : (
+                        <PaginationItem key={p}>
+                          <PaginationLink
+                            href="#"
+                            isActive={p === safePage}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              goToPage(p)
+                            }}
+                          >
+                            {p}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {e.preventDefault()
+                          goToPage(safePage + 1)
+                        }}
+                        className={safePage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </div>

@@ -15,26 +15,34 @@ export async function GET() {
       orderBy: { attendancePercentage: "desc" },
     })
 
-    const excellent = employees.filter((e) => e.attendancePercentage >= 90).length
-    const good = employees.filter(
+    // Normalize null/undefined attendancePercentage to 0 once, up front,
+    // so every downstream calculation (and the JSON we send to the client)
+    // is consistent.
+    const normalized = employees.map((e) => ({
+      ...e,
+      attendancePercentage: e.attendancePercentage ?? 0,
+    }))
+
+    const excellent = normalized.filter((e) => e.attendancePercentage >= 90).length
+    const good = normalized.filter(
       (e) => e.attendancePercentage >= 75 && e.attendancePercentage < 90
     ).length
-    const averageCount = employees.filter(
+    const averageCount = normalized.filter(
       (e) => e.attendancePercentage >= 50 && e.attendancePercentage < 75
     ).length
-    const poor = employees.filter((e) => e.attendancePercentage < 50).length
+    const poor = normalized.filter((e) => e.attendancePercentage < 50).length
 
     const average =
-      employees.length > 0
+      normalized.length > 0
         ? Math.round(
-            employees.reduce((sum, e) => sum + (e.attendancePercentage ?? 0), 0) /
-              employees.length
+            normalized.reduce((sum, e) => sum + e.attendancePercentage, 0) /
+              normalized.length
           )
         : 0
 
     const stats = { average, excellent, good, averageCount, poor }
 
-    return NextResponse.json({ employees, stats })
+    return NextResponse.json({ employees: normalized, stats })
   } catch (error) {
     console.error("Attendance fetch error:", error)
     return NextResponse.json(

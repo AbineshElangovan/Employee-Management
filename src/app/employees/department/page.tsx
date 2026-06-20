@@ -100,7 +100,7 @@ export default function DepartmentPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center text-muted-foreground">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center text-muted-foreground px-4 text-center">
         Unable to load department analytics.
       </div>
     )
@@ -110,51 +110,53 @@ export default function DepartmentPage() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <main className="w-full px-6 py-6 space-y-6">
+      <main className="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* Page header */}
         <Card>
-          <CardContent className="flex items-center gap-4 p-8">
-            <div className="rounded-xl bg-blue-600 p-4 text-white">
-              <Building2 className="h-10 w-10" />
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 sm:p-8">
+            <div className="rounded-xl bg-blue-600 p-3 sm:p-4 text-white shrink-0">
+              <Building2 className="h-7 w-7 sm:h-10 sm:w-10" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
                 Department Management &amp; Analytics
               </h1>
-              <p className="text-muted-foreground text-lg">
+              <p className="text-muted-foreground text-sm sm:text-base lg:text-lg mt-1">
                 View and manage department details and key company analytics
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid lg:grid-cols-[2fr_1fr] gap-6">
+        <div className="grid lg:grid-cols-[2fr_1fr] gap-4 sm:gap-6">
 
           {/* Department cards */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Department Overview</CardTitle>
-              <p className="text-muted-foreground">
+            <CardHeader className="px-4 sm:px-6">
+              <CardTitle className="text-xl sm:text-2xl">Department Overview</CardTitle>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Manage departments and view employee details
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
               {departments.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No departments found.</p>
               ) : (
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                   {departments.map((dept) => (
                     <Card key={dept.department} className="transition hover:shadow-lg">
-                      <CardContent className="p-6">
-                        <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                          <Users className="h-7 w-7 text-blue-600" />
+                      <CardContent className="p-5 sm:p-6">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-100 flex items-center justify-center mb-3 sm:mb-4">
+                          <Users className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600" />
                         </div>
-                        <h3 className="text-xl font-semibold">{dept.department}</h3>
-                        <p className="text-blue-600 font-medium mt-2">
+                        <h3 className="text-lg sm:text-xl font-semibold break-words">
+                          {dept.department}
+                        </h3>
+                        <p className="text-blue-600 font-medium mt-2 text-sm sm:text-base">
                           {dept.employeeCount} Employees
                         </p>
-                        <p className="text-sm text-muted-foreground mt-4">
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 break-words">
                           Head:{" "}
                           <span className="font-medium text-foreground">
                             {dept.headName ?? "Not Assigned"}
@@ -170,19 +172,19 @@ export default function DepartmentPage() {
 
           {/* Analytics cards */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Employee Analytics</CardTitle>
-              <p className="text-muted-foreground">Key insights and statistics</p>
+            <CardHeader className="px-4 sm:px-6">
+              <CardTitle className="text-xl sm:text-2xl">Employee Analytics</CardTitle>
+              <p className="text-muted-foreground text-sm sm:text-base">Key insights and statistics</p>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="px-4 sm:px-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {ANALYTICS_CARDS.map(({ key, label, icon: Icon, color, format }) => (
                   <Card key={key}>
-                    <CardContent className="p-5">
-                      <Icon className={`h-8 w-8 ${color} mb-3`} />
-                      <p className="text-muted-foreground text-sm">{label}</p>
+                    <CardContent className="p-4 sm:p-5 overflow-hidden">
+                      <Icon className={`h-6 w-6 sm:h-8 sm:w-8 ${color} mb-2 sm:mb-3`} />
+                      <p className="text-muted-foreground text-xs sm:text-sm">{label}</p>
                       <h2
-                        className={`text-3xl font-bold mt-1 ${
+                        className={`font-bold mt-1 whitespace-nowrap text-[clamp(0.95rem,5vw,1.5rem)] sm:text-2xl lg:text-3xl ${
                           key === "highestSalary"
                             ? "text-green-600"
                             : key === "lowestSalary"

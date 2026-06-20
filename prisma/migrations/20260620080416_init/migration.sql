@@ -1,7 +1,6 @@
 -- CreateTable
 CREATE TABLE "Employee" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "imageUrl" TEXT NOT NULL,
     "employeeId" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
@@ -9,11 +8,12 @@ CREATE TABLE "Employee" (
     "phone" TEXT NOT NULL,
     "department" TEXT NOT NULL,
     "designation" TEXT,
-    "joiningDate" DATETIME NOT NULL,
     "salary" REAL NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'active',
+    "status" TEXT NOT NULL,
     "attendancePercentage" REAL NOT NULL DEFAULT 0,
     "address" TEXT NOT NULL,
+    "joiningDate" DATETIME NOT NULL,
+    "imageUrl" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );

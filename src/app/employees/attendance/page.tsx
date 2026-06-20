@@ -96,46 +96,46 @@ export default function AttendancePage() {
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
 
-useEffect(() => {
-  setLoading(true)
-  setFetchError(null)
+  useEffect(() => {
+    setLoading(true)
+    setFetchError(null)
 
-  const controller = new AbortController()
+    const controller = new AbortController()
 
-  const timeout = setTimeout(() => {
-    controller.abort()
-  }, 15000)
+    const timeout = setTimeout(() => {
+      controller.abort()
+    }, 15000)
 
-  fetch("/api/attendance", {
-    signal: controller.signal,
-  })
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status} ${res.statusText}`)
-      }
-      return res.json()
+    fetch("/api/attendance", {
+      signal: controller.signal,
     })
-    .then((json: AttendanceData) => {
-      setData(json)
-    })
-    .catch((err: Error) => {
-      if (err.name === "AbortError") {
-        return
-      }
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status} ${res.statusText}`)
+        }
+        return res.json()
+      })
+      .then((json: AttendanceData) => {
+        setData(json)
+      })
+      .catch((err: Error) => {
+        if (err.name === "AbortError") {
+          return
+        }
 
-      setFetchError(err.message)
-      toast.error("Failed to load attendance data.")
-    })
-    .finally(() => {
+        setFetchError(err.message)
+        toast.error("Failed to load attendance data.")
+      })
+      .finally(() => {
+        clearTimeout(timeout)
+        setLoading(false)
+      })
+
+    return () => {
       clearTimeout(timeout)
-      setLoading(false)
-    })
-
-  return () => {
-    clearTimeout(timeout)
-    controller.abort()
-  }
-}, [])
+      controller.abort()
+    }
+  }, [])
 
   const filtered = data?.employees.filter((emp) => {
     const q = search.toLowerCase()
@@ -147,7 +147,6 @@ useEffect(() => {
     )
   })
 
-  
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -155,7 +154,6 @@ useEffect(() => {
       </div>
     )
   }
-
 
   if (fetchError || !data) {
     return (
@@ -172,7 +170,6 @@ useEffect(() => {
 
   const { stats, employees } = data
 
-  // ── Page ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto p-4 md:p-6 space-y-6">

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { getEmployees, Employee } from '@/lib/db-actions'
+import { getEmployees, Employee } from '@/src/lib/db-actions'
 
 type EmployeeStore = {
   employees: Employee[]
