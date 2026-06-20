@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import db from "@/lib/db"
+import prisma from "@/src/lib/prisma"
+import { Prisma } from "@prisma/client"
 
 export async function GET(
   _req: Request,
@@ -7,27 +8,19 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-
-    const employee = db
-      .prepare("SELECT * FROM employees WHERE id = ?")
-      .get(id) as any
-
+    const employee = await prisma.employee.findUnique({ where: { id } })
     if (!employee) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
-
-    if (employee.status) {
-      employee.status = employee.status.toLowerCase().replace(/\s+/g, "_")
-    }
-
-    if (!employee.imageUrl && employee.Image) {
-      employee.imageUrl = employee.Image
-    }
-
-    return NextResponse.json(employee)
+    return NextResponse.json({
+      ...employee,
+      joiningDate: employee.joiningDate.toISOString(),
+      createdAt: employee.createdAt.toISOString(),
+      updatedAt: employee.updatedAt.toISOString(),
+    })
   } catch (error) {
-    console.error("GET employee error:", error)
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+    console.error("DB error:", error)
+    return NextResponse.json({ error: "Failed to fetch employee" }, { status: 500 })
   }
 }
 
@@ -39,42 +32,37 @@ export async function PUT(
     const { id } = await params
     const body = await req.json()
 
-    db.prepare(`
-      UPDATE employees SET
-        firstName = ?,
-        lastName = ?,
-        email = ?,
-        phone = ?,
-        department = ?,
-        designation = ?,
-        salary = ?,
-        status = ?,
-        address = ?,
-        attendancePercentage = ?,
-        updatedAt = datetime('now')
-      WHERE id = ?
-    `).run(
-      body.firstName,
-      body.lastName,
-      body.email,
-      body.phone ?? null,
-      body.department,
-      body.designation ?? null,
-      body.salary,
-      body.status,
-      body.address ?? null,
-      body.attendancePercentage ?? 0,
-      id
-    )
+    const updated = await prisma.employee.update({
+      where: { id },
+      data: {
+        firstName: body.firstName,
+        lastName: body.lastName,
+        email: body.email,
+        phone: body.phone,
+        address: body.address,
+        department: body.department,
+        designation: body.designation,
+        joiningDate: body.joiningDate ? new Date(body.joiningDate) : undefined,
+        salary: body.salary,
+        status: body.status,
+        attendancePercentage: body.attendancePercentage,
+        imageUrl: body.imageUrl,
+      },
+    })
 
-    const updated = db
-      .prepare("SELECT * FROM employees WHERE id = ?")
-      .get(id)
-
-    return NextResponse.json(updated)
-  } catch (error) {
-    console.error("PUT employee error:", error)
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+    return NextResponse.json({
+      ...updated,
+      joiningDate: updated.joiningDate.toISOString(),
+      createdAt: updated.createdAt.toISOString(),
+      updatedAt: updated.updatedAt.toISOString(),
+    })
+  } catch (error: any) {
+    console.error("PUT error:", error)
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = (error.meta?.target as string[])?.join(", ") || "field"
+      return NextResponse.json({ error: `${target} already exists` }, { status: 409 })
+    }
+    return NextResponse.json({ error: "Failed to update employee" }, { status: 500 })
   }
 }
 
@@ -84,12 +72,10 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-
-    db.prepare("DELETE FROM employees WHERE id = ?").run(id)
-
+    await prisma.employee.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("DELETE employee error:", error)
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+    console.error("DELETE error:", error)
+    return NextResponse.json({ error: "Failed to delete employee" }, { status: 500 })
   }
 }

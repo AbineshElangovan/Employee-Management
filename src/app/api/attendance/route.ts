@@ -1,50 +1,38 @@
 import { NextResponse } from "next/server"
-import db from "@/lib/db"
-
-interface Employee {
-  id: string
-  firstName: string
-  lastName: string
-  employeeId: string
-  department: string
-  attendancePercentage: number
-}
-
-interface AttendanceStats {
-  average: number
-  excellent: number
-  good: number
-  averageCount: number
-  poor: number
-}
+import prisma from "@/src/lib/prisma"
 
 export async function GET() {
   try {
-    const employees = db
-      .prepare(
-        `SELECT 
-          id, 
-          firstName, 
-          lastName, 
-          employeeId, 
-          department, 
-          COALESCE(attendancePercentage, 0) AS attendancePercentage
-         FROM employees
-         ORDER BY attendancePercentage DESC`
-      )
-      .all() as Employee[]
+    const employees = await prisma.employee.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        employeeId: true,
+        department: true,
+        attendancePercentage: true,
+      },
+      orderBy: { attendancePercentage: "desc" },
+    })
 
-    const stats = db
-      .prepare(
-        `SELECT
-          ROUND(COALESCE(AVG(attendancePercentage), 0)) AS average,
-          COUNT(CASE WHEN attendancePercentage >= 90 THEN 1 END)                                        AS excellent,
-          COUNT(CASE WHEN attendancePercentage >= 75 AND attendancePercentage < 90 THEN 1 END)          AS good,
-          COUNT(CASE WHEN attendancePercentage >= 50 AND attendancePercentage < 75 THEN 1 END)          AS averageCount,
-          COUNT(CASE WHEN attendancePercentage < 50  OR  attendancePercentage IS NULL THEN 1 END)       AS poor
-        FROM employees`
-      )
-      .get() as AttendanceStats
+    const excellent = employees.filter((e) => e.attendancePercentage >= 90).length
+    const good = employees.filter(
+      (e) => e.attendancePercentage >= 75 && e.attendancePercentage < 90
+    ).length
+    const averageCount = employees.filter(
+      (e) => e.attendancePercentage >= 50 && e.attendancePercentage < 75
+    ).length
+    const poor = employees.filter((e) => e.attendancePercentage < 50).length
+
+    const average =
+      employees.length > 0
+        ? Math.round(
+            employees.reduce((sum, e) => sum + (e.attendancePercentage ?? 0), 0) /
+              employees.length
+          )
+        : 0
+
+    const stats = { average, excellent, good, averageCount, poor }
 
     return NextResponse.json({ employees, stats })
   } catch (error) {

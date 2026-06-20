@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server"
-import db from "@/lib/db"
+import prisma from "@/src/lib/prisma"
 
 export async function GET() {
   try {
-    const rows = db
-      .prepare(`SELECT employeeId FROM employees`)
-      .all() as { employeeId: string }[]
+    const rows = await prisma.employee.findMany({
+      select: { employeeId: true },
+    })
 
     let maxNum = 0
-
     for (const row of rows) {
-      
       const match = row.employeeId.match(/\d+/)
       if (match) {
         const num = parseInt(match[0], 10)

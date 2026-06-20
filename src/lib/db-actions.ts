@@ -1,7 +1,7 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
-import { revalidatePath } from "next/cache"
+import prisma from "@/src/lib/prisma"
+import { Prisma } from "@prisma/client"
 
 export type Employee = {
   id: string
@@ -11,7 +11,7 @@ export type Employee = {
   email: string
   phone: string
   department: string
-  designation?: string
+  designation?: string | null
   salary: number
   status: "active" | "inactive" | "on_leave"
   attendancePercentage?: number
@@ -22,41 +22,32 @@ export type Employee = {
   updatedAt?: string
 }
 
-export async function getEmployees(): Promise<Employee[]> {
-  const employees = await prisma.employee.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  })
-
-  return employees.map((emp) => ({
-    ...emp,
-    joiningDate: emp.joiningDate.toISOString(),
-    createdAt: emp.createdAt.toISOString(),
-    updatedAt: emp.updatedAt.toISOString(),
-  }))
-}
-
-export async function getEmployee(id: string): Promise<Employee | null> {
-  const employee = await prisma.employee.findUnique({
-    where: { id },
-  })
-
-  if (!employee) return null
-
+function serializeEmployee(employee: any): Employee {
   return {
     ...employee,
     joiningDate: employee.joiningDate.toISOString(),
-    createdAt: employee.createdAt.toISOString(),
-    updatedAt: employee.updatedAt.toISOString(),
+    createdAt: employee.createdAt?.toISOString(),
+    updatedAt: employee.updatedAt?.toISOString(),
   }
+}
+
+export async function getEmployees(): Promise<Employee[]> {
+  const employees = await prisma.employee.findMany({
+    orderBy: { createdAt: "desc" },
+  })
+  return employees.map(serializeEmployee)
+}
+
+export async function getEmployee(id: string): Promise<Employee | null> {
+  const employee = await prisma.employee.findUnique({ where: { id } })
+  return employee ? serializeEmployee(employee) : null
 }
 
 export async function createEmployee(
   data: Omit<Employee, "id" | "createdAt" | "updatedAt">
 ) {
   try {
-    const employee = await prisma.employee.create({
+    const newEmployee = await prisma.employee.create({
       data: {
         employeeId: data.employeeId,
         firstName: data.firstName,
@@ -64,38 +55,30 @@ export async function createEmployee(
         email: data.email,
         phone: data.phone,
         department: data.department,
-        designation: data.designation,
+        designation: data.designation || null,
         salary: data.salary,
         status: data.status,
         attendancePercentage: data.attendancePercentage ?? 0,
         address: data.address,
         joiningDate: new Date(data.joiningDate),
-        imageUrl: data.imageUrl,
+        imageUrl: data.imageUrl || null,
       },
     })
 
-    revalidatePath("/employees")
-
-    return {
-      success: true,
-      data: employee,
-    }
+    return { success: true, data: serializeEmployee(newEmployee) }
   } catch (error: any) {
     console.error("createEmployee error:", error)
-
-    return {
-      success: false,
-      error: error.message,
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = (error.meta?.target as string[])?.join(", ") || "field"
+      return { success: false, error: `${target} already exists` }
     }
+    return { success: false, error: error.message }
   }
 }
 
-export async function updateEmployee(
-  id: string,
-  data: Partial<Employee>
-) {
+export async function updateEmployee(id: string, data: Partial<Employee>) {
   try {
-    const employee = await prisma.employee.update({
+    const updated = await prisma.employee.update({
       where: { id },
       data: {
         firstName: data.firstName,
@@ -103,52 +86,33 @@ export async function updateEmployee(
         email: data.email,
         phone: data.phone,
         department: data.department,
-        designation: data.designation,
+        designation: data.designation ?? null,
         salary: data.salary,
         status: data.status,
-        attendancePercentage: data.attendancePercentage,
+        attendancePercentage: data.attendancePercentage ?? 0,
         address: data.address,
-        joiningDate: data.joiningDate
-          ? new Date(data.joiningDate)
-          : undefined,
-        imageUrl: data.imageUrl,
+        joiningDate: data.joiningDate ? new Date(data.joiningDate) : undefined,
+        imageUrl: data.imageUrl ?? null,
       },
     })
 
-    revalidatePath("/employees")
-    revalidatePath(`/employees/${id}/view`)
-
-    return {
-      success: true,
-      data: employee,
-    }
+    return { success: true, data: serializeEmployee(updated) }
   } catch (error: any) {
     console.error("updateEmployee error:", error)
-
-    return {
-      success: false,
-      error: error.message,
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const target = (error.meta?.target as string[])?.join(", ") || "field"
+      return { success: false, error: `${target} already exists` }
     }
+    return { success: false, error: error.message }
   }
 }
 
 export async function deleteEmployee(id: string) {
   try {
-    await prisma.employee.delete({
-      where: { id },
-    })
-
-    revalidatePath("/employees")
-
-    return {
-      success: true,
-    }
+    await prisma.employee.delete({ where: { id } })
+    return { success: true }
   } catch (error: any) {
     console.error("deleteEmployee error:", error)
-
-    return {
-      success: false,
-      error: error.message,
-    }
+    return { success: false, error: error.message }
   }
 }

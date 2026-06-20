@@ -1,59 +1,50 @@
 import { NextResponse } from "next/server"
-import db from "@/lib/db"
-
-type Department = {
-  department: string
-  employeeCount: number
-  headName: string | null
-}
-
-type Stats = {
-  totalSalary: number
-  averageSalary: number
-  highestSalary: number
-  lowestSalary: number
-  averageAttendance: number
-}
+import prisma from "@/src/lib/prisma"
 
 export async function GET() {
   try {
-    const departments = db
-      .prepare(`
-        SELECT
-          e1.department,
-          COUNT(*) AS employeeCount,
-          (
-            SELECT firstName || ' ' || lastName
-            FROM employees e2
-            WHERE e2.department = e1.department
-              AND e2.salary IS NOT NULL
-            ORDER BY e2.salary DESC
-            LIMIT 1
-          ) AS headName
-        FROM employees e1
-        GROUP BY e1.department
-        ORDER BY e1.department
-      `)
-      .all() as Department[]
+    const allEmployees = await prisma.employee.findMany({
+      select: {
+        department: true,
+        firstName: true,
+        lastName: true,
+        salary: true,
+      },
+    })
 
-    const rawStats = db
-      .prepare(`
-        SELECT
-          COALESCE(SUM(salary), 0)               AS totalSalary,
-          COALESCE(AVG(salary), 0)               AS averageSalary,
-          COALESCE(MAX(salary), 0)               AS highestSalary,
-          COALESCE(MIN(salary), 0)               AS lowestSalary,
-          COALESCE(AVG(attendancePercentage), 0) AS averageAttendance
-        FROM employees
-      `)
-      .get() as Stats | undefined
+    const byDept = new Map<string, typeof allEmployees>()
+    for (const emp of allEmployees) {
+      const list = byDept.get(emp.department) ?? []
+      list.push(emp)
+      byDept.set(emp.department, list)
+    }
 
-    const stats = rawStats ?? {
-      totalSalary: 0,
-      averageSalary: 0,
-      highestSalary: 0,
-      lowestSalary: 0,
-      averageAttendance: 0,
+    const departments = Array.from(byDept.entries())
+      .map(([department, emps]) => {
+        const head = [...emps]
+          .filter((e) => e.salary != null)
+          .sort((a, b) => b.salary - a.salary)[0]
+        return {
+          department,
+          employeeCount: emps.length,
+          headName: head ? `${head.firstName} ${head.lastName}` : null,
+        }
+      })
+      .sort((a, b) => a.department.localeCompare(b.department))
+
+    const aggregate = await prisma.employee.aggregate({
+      _sum: { salary: true },
+      _avg: { salary: true, attendancePercentage: true },
+      _max: { salary: true },
+      _min: { salary: true },
+    })
+
+    const stats = {
+      totalSalary: aggregate._sum.salary ?? 0,
+      averageSalary: aggregate._avg.salary ?? 0,
+      highestSalary: aggregate._max.salary ?? 0,
+      lowestSalary: aggregate._min.salary ?? 0,
+      averageAttendance: aggregate._avg.attendancePercentage ?? 0,
     }
 
     return NextResponse.json({ departments, stats })
