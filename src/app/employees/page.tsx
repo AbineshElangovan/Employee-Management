@@ -12,21 +12,38 @@ import { ArrowLeft, Pencil, Search, Eye, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Employee } from "@/src/app/types/employee"
 
-// type Employee = {
-//   id: string
-//   employeeId: string
-//   firstName: string
-//   lastName: string
-//   email: string
-//   department: string
-//   designation?: string
-//   salary: number
-//   attendancePercentage?: number
-//   status: string
-//   imageUrl?: string
-// }
-
 const PAGE_SIZE = 10
+
+
+
+async function getToken(): Promise<string> {
+  const cached = localStorage.getItem("token")
+  if (cached) return cached
+
+  const res = await fetch("/api/token")
+  const data = await res.json()
+  localStorage.setItem("token", data.token)
+  return data.token
+}
+
+async function fetchWithAuth(url: string): Promise<Response> {
+  const token = await getToken()
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (res.status === 401) {
+    localStorage.removeItem("token")
+    const freshToken = await getToken()
+    return fetch(url, {
+      headers: { Authorization: `Bearer ${freshToken}` },
+    })
+  }
+
+  return res
+}
+
+
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
@@ -39,7 +56,7 @@ export default function EmployeesPage() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await fetch("/api/employees")
+        const res = await fetchWithAuth("/api/employees")
         if (!res.ok) throw new Error("Failed to fetch")
         const json = await res.json()
         setEmployees(json)
@@ -99,7 +116,6 @@ export default function EmployeesPage() {
   const startIndex = (safePage - 1) * PAGE_SIZE
   const displayEmployees = filtered.slice(startIndex, startIndex + PAGE_SIZE)
 
-  
   const resetPage = () => setCurrentPage(1)
 
   const handleSearchChange = (value: string) => {
@@ -322,7 +338,8 @@ export default function EmployeesPage() {
                     <PaginationItem>
                       <PaginationNext
                         href="#"
-                        onClick={(e) => {e.preventDefault()
+                        onClick={(e) => {
+                          e.preventDefault()
                           goToPage(safePage + 1)
                         }}
                         className={safePage === totalPages ? "pointer-events-none opacity-50" : ""}

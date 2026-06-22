@@ -14,10 +14,6 @@ export async function GET() {
       },
       orderBy: { attendancePercentage: "desc" },
     })
-
-    // Normalize null/undefined attendancePercentage to 0 once, up front,
-    // so every downstream calculation (and the JSON we send to the client)
-    // is consistent.
     const normalized = employees.map((e) => ({
       ...e,
       attendancePercentage: e.attendancePercentage ?? 0,
