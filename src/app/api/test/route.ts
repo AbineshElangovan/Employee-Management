@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
-import db from "@/lib/db"
+import prisma from "@/src/lib/prisma"
 
 export async function GET() {
   try {
-    const employees = db.prepare("SELECT * FROM employees").all()
+    const employees = await prisma.employee.findMany()
 
     return NextResponse.json({
       count: employees.length,
