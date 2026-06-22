@@ -15,7 +15,7 @@ export type Employee = {
   attendancePercentage: number
   address: string
   joiningDate: string
-   imageUrl?: string
+   imageUrl?: string    
 }
 
 export type EmployeeFormData = Omit<Employee, "id">

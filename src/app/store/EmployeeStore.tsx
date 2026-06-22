@@ -21,7 +21,7 @@ export const useEmployeeStore = create<EmployeeStore>((set, get) => ({
   generateEmployeeId: () => {
     const employees = get().employees
     const numbers = employees
-      .map((emp) => {
+      .map((emp) => {    
         const match = emp.employeeId.match(/^EMP(\d+)$/i)
         return match ? parseInt(match[1], 10) : 0
       })
