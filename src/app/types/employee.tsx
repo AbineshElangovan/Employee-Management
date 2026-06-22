@@ -14,7 +14,7 @@ export type Employee = {
   status: EmployeeStatus
   attendancePercentage: number
   address: string
-  joiningDate: string
+  joiningDate: string  
    imageUrl?: string    
 }
 

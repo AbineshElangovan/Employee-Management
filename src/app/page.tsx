@@ -43,7 +43,7 @@ export default function DashboardPage() {
         console.log("data", json)
         setData(json)
       } catch (error) {
-        toast.error("Failed to load dashboard")
+        toast.error("Failed to load dashboard")  
         console.error(error)   
       } finally {
         setLoading(false)    

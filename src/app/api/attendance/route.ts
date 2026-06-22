@@ -8,7 +8,7 @@ export async function GET() {
   )
 
   try {
-    const employees = await prisma.employee.findMany({
+    const employees = await prisma.employee.findMany({  
       select: {
         id: true,
         firstName: true,

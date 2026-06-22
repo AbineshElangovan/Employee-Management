@@ -21,7 +21,7 @@ export async function GET() {
 
     const departments = Array.from(byDept.entries())
       .map(([department, emps]) => {
-        const head = [...emps]
+        const head = [...emps]   
           .filter((e) => e.salary != null)
           .sort((a, b) => b.salary - a.salary)[0]
         return {
