@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { verifyToken } from "@/src/lib/verifyToken"
 import prisma from "@/src/lib/prisma"
 
+export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   const authError = verifyToken(request)
   if (authError) return authError
