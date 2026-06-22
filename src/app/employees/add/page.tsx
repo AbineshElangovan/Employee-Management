@@ -100,7 +100,7 @@ export default function AddEmployeePage() {
   const removeImage = () => {
     setImagePreview("")
     form.setValue("imageUrl", "")
-  }
+  }   
 
   const onSubmit = async (values: EmployeeFormValues) => {
     setLoading(true)

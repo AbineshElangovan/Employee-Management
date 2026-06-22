@@ -121,5 +121,5 @@ function serializeEmployee(employee: any): Employee {
     joiningDate: employee.joiningDate.toISOString(),
     createdAt: employee.createdAt?.toISOString(),
     updatedAt: employee.updatedAt?.toISOString(),
-  }
+  }  
 }

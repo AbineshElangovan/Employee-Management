@@ -16,7 +16,7 @@ import type { Employee } from "@/src/app/types/employee"
 //   id: string
 //   employeeId: string
 //   firstName: string
-//   lastName: string
+//   lastName: string   
 //   email: string
 //   department: string
 //   designation?: string

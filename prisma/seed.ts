@@ -146,7 +146,7 @@ const employees: EmployeeSeed[] = [
     attendancePercentage: 96,
     joiningDate: "2021-01-25",
     imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=KavyaKrishnan",
-  },
+  },   
   {
     firstName: "Aditya",
     lastName: "Bose",

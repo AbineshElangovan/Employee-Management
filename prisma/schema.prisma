@@ -20,12 +20,12 @@ model Employee {
   lastName             String
   email                String   @unique
   phone                String
-  department           String
+  department           String    
   designation          String?
   salary               Float
   status               String
   attendancePercentage Float    @default(0)
-  address              String
+  address              String     
   joiningDate          DateTime
   imageUrl             String?
   createdAt            DateTime @default(now())
