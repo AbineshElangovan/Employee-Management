@@ -46,7 +46,7 @@ export default function DashboardPage() {
         toast.error("Failed to load dashboard")
         console.error(error)   
       } finally {
-        setLoading(false)
+        setLoading(false)    
       }
     }
 

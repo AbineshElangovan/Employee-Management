@@ -11,7 +11,7 @@ if (connectionString.startsWith("file:")) {
     const resolvedPath = path.resolve(process.cwd(), "prisma", dbPath)
     connectionString = `file:${resolvedPath}`
   }
-}
+}  
 
 const adapter = new PrismaBetterSqlite3({ url: connectionString })
 
