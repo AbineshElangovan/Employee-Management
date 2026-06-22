@@ -3,11 +3,17 @@ import prisma from "@/src/lib/prisma"
 
 export async function GET() {
   try {
-    const [totalEmployees, activeEmployees, onLeaveEmployees] = await Promise.all([
-      prisma.employee.count(),
-      prisma.employee.count({ where: { status: "active" } }),
-      prisma.employee.count({ where: { status: "on_leave" } }),
-    ])
+    const allStatuses = await prisma.employee.findMany({
+      select: { status: true },
+    })
+
+    const totalEmployees = allStatuses.length
+    const activeEmployees = allStatuses.filter(
+      (e) => e.status?.toLowerCase() === "active"
+    ).length
+    const onLeaveEmployees = allStatuses.filter(
+      (e) => e.status?.toLowerCase() === "on_leave"
+    ).length
 
     const deptStats = await prisma.employee.groupBy({
       by: ["department"],
@@ -20,7 +26,7 @@ export async function GET() {
 
     const recentEmployees = await prisma.employee.findMany({
       orderBy: { createdAt: "desc" },
-      take:11,
+      take: 11,
     })
 
     const total = totalEmployees || 1

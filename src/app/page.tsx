@@ -11,6 +11,16 @@ import Link from "next/link"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { toast } from "sonner"
 
+type RecentEmployee = {
+  id: string
+  firstName: string
+  lastName: string
+  designation?: string | null
+  department: string
+  imageUrl?: string | null
+  joiningDate: string
+}
+
 type DashboardData = {
   totalEmployees: number
   activeEmployees: number
@@ -147,7 +157,7 @@ export default function DashboardPage() {
                 </Button>
               </CardHeader>
               <CardContent>
-                {recentByDate.length === 0? (
+                {recentByDate.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No employees in database.</p>
                 ) : (
                   <div className="space-y-4">
@@ -183,7 +193,7 @@ export default function DashboardPage() {
                   <CardTitle>Department Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {data.departmentSummary.length === 0? (
+                  {data.departmentSummary.length === 0 ? (
                     <p className="text-center text-muted-foreground py-4">No departments found.</p>
                   ) : (
                     <div className="space-y-4">
@@ -206,7 +216,7 @@ export default function DashboardPage() {
                   <CardTitle>Employee Status</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {data.totalEmployees === 0? (
+                  {data.totalEmployees === 0 ? (
                     <p className="text-center text-muted-foreground py-4">No employee data.</p>
                   ) : (
                     <>
@@ -236,7 +246,7 @@ export default function DashboardPage() {
                               <span>{s.name}</span>
                             </div>
                             <span className="text-muted-foreground">
-                              {data.totalEmployees > 0 ? Math.round((s.value/data.totalEmployees)*100) : 0}%
+                              {data.totalEmployees > 0 ? Math.round((s.value / data.totalEmployees) * 100) : 0}%
                             </span>
                           </div>
                         ))}
