@@ -24,7 +24,7 @@ export const DEPARTMENTS = [
   "Product",
   "Marketing",
   "Sales",
-  "Human Resources",
+  "Human Resources",    
   "Finance",
   "Operations",
   "Customer Support",
