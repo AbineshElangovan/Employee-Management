@@ -13,15 +13,15 @@ export async function GET() {
     ).length
     const onLeaveEmployees = allStatuses.filter(
       (e) => e.status?.toLowerCase() === "on_leave"
-    ).length
-
+    ).length   
+          
     const deptStats = await prisma.employee.groupBy({
       by: ["department"],
-      _count: { department: true },
+      _count: { department: true },   
     })
 
     const salaryAgg = await prisma.employee.aggregate({
-      _avg: { salary: true },
+      _avg: { salary: true },   
     })
 
     const recentEmployees = await prisma.employee.findMany({
@@ -30,7 +30,7 @@ export async function GET() {
     })
 
     const total = totalEmployees || 1
-
+    
     const departmentSummary = deptStats.map((dept) => ({
       name: dept.department,
       value: dept._count.department,
