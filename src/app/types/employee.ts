@@ -1,9 +1,7 @@
 import type { EmployeeFormValues } from "@/src/schemas/employee.schema"
 
 
-// =======================
-// Employee Types
-// =======================
+
 
 export type Employee = EmployeeFormValues & {
   id: string
@@ -14,9 +12,7 @@ export type Employee = EmployeeFormValues & {
 export type EmployeeFormData = EmployeeFormValues
 
 
-// =======================
-// Auth Types
-// =======================
+
 
 export type User = {
   id: string
@@ -41,9 +37,7 @@ export type ForgotPasswordData = {
 }
 
 
-// =======================
-// Department Types
-// =======================
+
 
 export type Department = {
   id?: string
@@ -53,9 +47,7 @@ export type Department = {
 }
 
 
-// =======================
-// Attendance Types
-// =======================
+
 
 export type AttendanceStatus =
   | "Present"
@@ -75,10 +67,6 @@ export type AttendanceRecord = {
 }
 
 
-// =======================
-// Dashboard Types
-// =======================
-
 export type DashboardData = {
   totalEmployees: number
   activeEmployees: number
@@ -96,9 +84,6 @@ export type DashboardData = {
 }
 
 
-// =======================
-// API Response Types
-// =======================
 
 export type ApiResponse<T> = {
   data?: T
@@ -107,9 +92,7 @@ export type ApiResponse<T> = {
 }
 
 
-// =======================
-// Pagination Types
-// =======================
+
 
 export type Pagination = {
   page: number
