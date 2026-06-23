@@ -15,9 +15,10 @@ export async function GET() {
     const token = jwt.sign(
       { app: "employee-management" },
       secret,
-      { expiresIn: "10m" }
+      { expiresIn: "1m" }
     )
-
+    console.log("token expiry")
+    console.log("New Token", token)
     return NextResponse.json({ token })
   } catch (error) {
     console.error("Token generation error:", error)

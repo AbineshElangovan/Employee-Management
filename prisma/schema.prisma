@@ -7,27 +7,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum EmployeeStatus {
-  active
-  inactive
-  on_leave
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
 }
 
 model Employee {
-  id                   String   @id @default(cuid())
-  employeeId           String   @unique
-  firstName            String
-  lastName             String
-  email                String   @unique
-  phone                String
-  department           String
-  designation          String?
-  salary               Float
-  status               String
-  attendancePercentage Float    @default(0)
-  address              String
-  joiningDate          DateTime
-  imageUrl             String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id         String  @id @default(cuid())
+  employeeId String  @unique
+  firstName  String
+  lastName   String
+  email      String  @unique
+  phone      String?
+  department String?
+  position   String?
+  status     String  @default("Active")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendances Attendance[]
+}
+
+model Attendance {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  date   DateTime
+  status String
+
+  checkIn  DateTime?
+  checkOut DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([employeeId, date])
+}
+
+model RefreshToken {
+  id String @id @default(cuid())
+
+  token String @unique
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

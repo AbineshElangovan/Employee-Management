@@ -11,7 +11,6 @@ import {Pagination,PaginationContent,PaginationEllipsis,PaginationItem,Paginatio
 import { ArrowLeft, Pencil, Search, Eye, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import type { Employee } from "@/src/app/types/employee"
-
 const PAGE_SIZE = 10
 
 

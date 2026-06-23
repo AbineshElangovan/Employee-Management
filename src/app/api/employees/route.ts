@@ -13,8 +13,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(
-      employees.map((e) => ({
-        ...e,
+      employees.map((e) => ({...e,
         joiningDate: e.joiningDate.toISOString(),
         createdAt:   e.createdAt.toISOString(),
         updatedAt:   e.updatedAt.toISOString(),
