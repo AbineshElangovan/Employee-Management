@@ -6,7 +6,8 @@ import { Button } from "@/src/components/ui/button"
 import { Progress } from "@/src/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Separator } from "@/src/components/ui/separator"
-import { Users, UserCheck, UserX, Building2, UserMinus, Loader2, User } from "lucide-react"
+import { Badge } from "@/src/components/ui/badge"
+import { Users, UserCheck, UserX, Building2, UserMinus, Loader2, User, Crown, Heart } from "lucide-react"
 import Link from "next/link"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { toast } from "sonner"
@@ -19,6 +20,8 @@ type RecentEmployee = {
   department: string
   imageUrl?: string | null
   joiningDate: string
+  isFavorite?: boolean
+  isHead?: boolean
 }
 
 type DashboardData = {
@@ -170,7 +173,21 @@ export default function DashboardPage() {
                           </Avatar>
                           <div className="flex-1 grid grid-cols-3 items-center gap-4">
                             <div>
-                              <p className="text-sm font-medium">{emp.firstName} {emp.lastName}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-sm font-medium">{emp.firstName} {emp.lastName}</p>
+                                {emp.isHead && (
+                                  <Badge className="bg-purple-500/15 text-purple-700 border-purple-500/30 dark:bg-purple-500/20 dark:text-purple-300 text-[10px] px-1.5 py-0 gap-1 font-semibold flex items-center">
+                                    <Crown className="h-3 w-3 fill-amber-500 text-amber-600" />
+                                    Head
+                                  </Badge>
+                                )}
+                                {emp.isFavorite && (
+                                  <Badge className="bg-rose-500/15 text-rose-700 border-rose-500/30 dark:bg-rose-500/20 dark:text-rose-300 text-[10px] px-1.5 py-0 gap-1 font-semibold flex items-center">
+                                    <Heart className="h-3 w-3 fill-rose-500 text-rose-600" />
+                                    Fav
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-xs text-muted-foreground">{emp.designation}</p>
                             </div>
                             <p className="text-sm text-muted-foreground">{emp.department}</p>

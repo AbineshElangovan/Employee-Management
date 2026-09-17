@@ -31,6 +31,7 @@ const statuses = [
 ]
 
 const samplePeople = [
+  { firstName: "Abinesh", lastName: "Elangovan" },
   { firstName: "Alexander", lastName: "Wright" },
   { firstName: "Sophia", lastName: "Chen" },
   { firstName: "Marcus", lastName: "Johnson" },
@@ -102,11 +103,17 @@ async function main() {
     const employeeId = `EMP-${empIdNum}`
     const department = departments[i % departments.length]
     const designations = designationsByDepartment[department]
-    const designation = designations[i % designations.length]
-    const status = statuses[i % statuses.length]
-    
-    const salary = 50000 + (i * 2250) % 95000
-    const attendancePercentage = attendancePercentages[i % attendancePercentages.length]
+    let designation = designations[i % designations.length]
+    let status = statuses[i % statuses.length]
+    let salary = 50000 + (i * 2250) % 95000
+    let attendancePercentage = attendancePercentages[i % attendancePercentages.length]
+
+    if (i === 0) {
+      designation = "Head of Development"
+      status = "Active"
+      salary = 250000
+      attendancePercentage = 99
+    }
 
     const year = 2021 + (i % 4)
     const month = (i % 12)
@@ -118,6 +125,8 @@ async function main() {
     const email = `${person.firstName.toLowerCase()}.${person.lastName.toLowerCase()}${i + 1}@company.com`
     const avatarIndex = (i % 70) + 1
     const imageUrl = `https://i.pravatar.cc/150?img=${avatarIndex}`
+
+    const isFavorite = i < departments.length
 
     const emp = await prisma.employee.create({
       data: {
@@ -135,6 +144,7 @@ async function main() {
         address: `${100 + i * 15} Main Street, Suite ${i + 1}, ${city}`,
         joiningDate,
         imageUrl,
+        isFavorite,
       },
     })
 

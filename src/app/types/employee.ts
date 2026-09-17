@@ -5,6 +5,8 @@ import type { EmployeeFormValues } from "@/src/schemas/employee.schema"
 
 export type Employee = EmployeeFormValues & {
   id: string
+  isFavorite?: boolean
+  isHead?: boolean
   createdAt: string
   updatedAt: string
 }

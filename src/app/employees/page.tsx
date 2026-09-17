@@ -8,12 +8,10 @@ import { Badge } from "@/src/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
 import {Pagination,PaginationContent,PaginationEllipsis,PaginationItem,PaginationLink,PaginationNext,PaginationPrevious,} from "@/src/components/ui/pagination"
-import { ArrowLeft, Pencil, Search, Eye, Loader2 } from "lucide-react"
+import { ArrowLeft, Pencil, Search, Eye, Loader2, Crown, Heart } from "lucide-react"
 import { toast } from "sonner"
 import type { Employee } from "@/src/app/types/employee"
 const PAGE_SIZE = 10
-
-
 
 async function getToken(): Promise<string> {
   const cached = localStorage.getItem("token")
@@ -41,8 +39,6 @@ async function fetchWithAuth(url: string): Promise<Response> {
 
   return res
 }
-
-
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
@@ -95,7 +91,11 @@ export default function EmployeesPage() {
       filtered = filtered.filter((emp) => emp.department === deptFilter)
     }
 
-    if (statusFilter !== "all") {
+    if (statusFilter === "heads") {
+      filtered = filtered.filter((emp) => emp.isHead)
+    } else if (statusFilter === "favorites") {
+      filtered = filtered.filter((emp) => emp.isFavorite)
+    } else if (statusFilter !== "all") {
       filtered = filtered.filter((emp) => normalizeStatus(emp.status) === normalizeStatus(statusFilter))
     }
 
@@ -212,15 +212,22 @@ export default function EmployeesPage() {
               </Select>
             </div>
 
-            <div className="flex gap-2 mb-4">
-              {["all", "active", "inactive", "on_leave"].map((s) => (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                { id: "all", label: "All Employees" },
+                { id: "heads", label: "👑 Dept Heads" },
+                { id: "favorites", label: "❤️ Favorites" },
+                { id: "active", label: "Active" },
+                { id: "on_leave", label: "On Leave" },
+                { id: "inactive", label: "Inactive" },
+              ].map((s) => (
                 <Button
-                  key={s}
-                  variant={statusFilter === s ? "default" : "outline"}
+                  key={s.id}
+                  variant={statusFilter === s.id ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleStatusChange(s)}
+                  onClick={() => handleStatusChange(s.id)}
                 >
-                  {s === "all" ? "All Employees" : getStatusLabel(s)}
+                  {s.label}
                 </Button>
               ))}
             </div>
@@ -268,8 +275,20 @@ export default function EmployeesPage() {
                         )}
                       </TableCell>
                       <TableCell>{emp.employeeId}</TableCell>
-                      <TableCell className="font-medium text-primary">
-                        {emp.firstName} {emp.lastName}
+                      <TableCell className="font-medium text-primary flex items-center gap-1.5 flex-wrap">
+                        <span>{emp.firstName} {emp.lastName}</span>
+                        {emp.isHead && (
+                          <Badge className="bg-purple-500/15 text-purple-700 border-purple-500/30 dark:bg-purple-500/20 dark:text-purple-300 text-[10px] px-1.5 py-0.5 gap-1 font-semibold flex items-center shrink-0">
+                            <Crown className="h-3 w-3 fill-amber-500 text-amber-600" />
+                            Head
+                          </Badge>
+                        )}
+                        {emp.isFavorite && (
+                          <Badge className="bg-rose-500/15 text-rose-700 border-rose-500/30 dark:bg-rose-500/20 dark:text-rose-300 text-[10px] px-1.5 py-0.5 gap-1 font-semibold flex items-center shrink-0">
+                            <Heart className="h-3 w-3 fill-rose-500 text-rose-600" />
+                            Fav
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>{emp.department}</TableCell>
                       <TableCell>₹{emp.salary.toLocaleString("en-IN")}</TableCell>

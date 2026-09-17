@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import prisma from "@/src/lib/prisma"
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const allEmployees = await prisma.employee.findMany({
@@ -9,6 +11,10 @@ export async function GET() {
         firstName: true,
         lastName: true,
         salary: true,
+        designation: true,
+        imageUrl: true,
+        isFavorite: true,
+        id: true,
       },
     })
 
@@ -25,10 +31,27 @@ export async function GET() {
         const head = [...emps]
           .filter((e) => e.salary != null)
           .sort((a, b) => (b.salary ?? 0) - (a.salary ?? 0))[0]
+        const favPerson = emps.find((e) => e.isFavorite) || head
         return {
           department,
           employeeCount: emps.length,
           headName: head ? `${head.firstName} ${head.lastName}` : null,
+          headPerson: head
+            ? {
+                id: head.id,
+                name: `${head.firstName} ${head.lastName}`,
+                designation: head.designation,
+                imageUrl: head.imageUrl,
+              }
+            : null,
+          favoritePerson: favPerson
+            ? {
+                id: favPerson.id,
+                name: `${favPerson.firstName} ${favPerson.lastName}`,
+                designation: favPerson.designation,
+                imageUrl: favPerson.imageUrl,
+              }
+            : null,
         }
       })
       .sort((a, b) => a.department.localeCompare(b.department))
@@ -52,7 +75,7 @@ export async function GET() {
   } catch (error) {
     console.error("Department analytics error:", error)
     return NextResponse.json(
-      { error: "Failed to fetch department analytics" },
+      { error: error instanceof Error ? error.message : "Failed to fetch department analytics" },
       { status: 500 }
     )
   }

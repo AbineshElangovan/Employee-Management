@@ -29,6 +29,19 @@ export async function GET() {
       take: 11,
     })
 
+    const allEmployeesForHeads = await prisma.employee.findMany({
+      select: { id: true, department: true, salary: true },
+    })
+    const maxSalaryMap = new Map<string, number>()
+    for (const emp of allEmployeesForHeads) {
+      if (emp.department && emp.salary != null) {
+        const curr = maxSalaryMap.get(emp.department) ?? -1
+        if (emp.salary > curr) {
+          maxSalaryMap.set(emp.department, emp.salary)
+        }
+      }
+    }
+
     const total = totalEmployees || 1
 
     const departmentSummary = deptStats.map((dept) => ({
@@ -43,12 +56,23 @@ export async function GET() {
       onLeaveEmployees,
       departmentSummary,
       averageSalary: Math.round(salaryAgg._avg.salary || 0),
-      recentEmployees: recentEmployees.map((e) => ({
-        ...e,
-        joiningDate: e.joiningDate.toISOString(),
-        createdAt: e.createdAt.toISOString(),
-        updatedAt: e.updatedAt.toISOString(),
-      })),
+      recentEmployees: recentEmployees.map((e) => {
+        const maxSal = e.department ? maxSalaryMap.get(e.department) : null
+        const isHead = Boolean(
+          e.department &&
+          e.salary != null &&
+          maxSal != null &&
+          e.salary === maxSal &&
+          e.salary > 0
+        )
+        return {
+          ...e,
+          isHead,
+          joiningDate: e.joiningDate.toISOString(),
+          createdAt: e.createdAt.toISOString(),
+          updatedAt: e.updatedAt.toISOString(),
+        }
+      }),
     })
   } catch (error) {
     console.error("Dashboard Error:", error)

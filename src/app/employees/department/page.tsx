@@ -4,14 +4,23 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
 import {
   Building2, Users, IndianRupee,
-  TrendingUp, TrendingDown, Clock, Loader2,
+  TrendingUp, TrendingDown, Clock, Loader2, Crown, Heart,
 } from "lucide-react"
 import { toast } from "sonner"
+
+type PersonSummary = {
+  id: string
+  name: string
+  designation: string | null
+  imageUrl: string | null
+}
 
 type Department = {
   department: string
   employeeCount: number
   headName: string | null
+  headPerson?: PersonSummary | null
+  favoritePerson?: PersonSummary | null
 }
 
 type Stats = {
@@ -72,7 +81,7 @@ export default function DepartmentPage() {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await fetch("/api/department")
+        const res = await fetch("/api/department", { cache: "no-store" })
         if (!res.ok) {
           const body = await res.text().catch(() => "")
           throw new Error(`Request failed: ${res.status} ${res.statusText} — ${body}`)
@@ -145,23 +154,86 @@ export default function DepartmentPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                   {departments.map((dept) => (
-                    <Card key={dept.department} className="transition hover:shadow-lg">
-                      <CardContent className="p-5 sm:p-6">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-100 flex items-center justify-center mb-3 sm:mb-4">
-                          <Users className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600" />
+                    <Card key={dept.department} className="transition hover:shadow-lg relative overflow-hidden border-border">
+                      <CardContent className="p-5 sm:p-6 space-y-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+                            <Users className="h-6 w-6 text-blue-500" />
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-gradient-to-r from-purple-500/10 via-amber-500/10 to-rose-500/10 border border-purple-500/20">
+                            <Crown className="h-3.5 w-3.5 fill-amber-500 text-amber-600" />
+                            <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-600" />
+                          </div>
                         </div>
-                        <h3 className="text-lg sm:text-xl font-semibold break-words">
-                          {dept.department}
-                        </h3>
-                        <p className="text-blue-600 font-medium mt-2 text-sm sm:text-base">
-                          {dept.employeeCount} Employees
-                        </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 break-words">
-                          Head:{" "}
-                          <span className="font-medium text-foreground">
-                            {dept.headName ?? "Not Assigned"}
-                          </span>
-                        </p>
+
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-semibold break-words">
+                            {dept.department}
+                          </h3>
+                          <p className="text-blue-500 font-medium text-sm mt-0.5">
+                            {dept.employeeCount} Employees
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 pt-3 border-t">
+                          {/* Head section */}
+                          <div className="flex items-center gap-3 bg-purple-500/5 p-2.5 rounded-lg border border-purple-500/15">
+                            {dept.headPerson?.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={dept.headPerson.imageUrl}
+                                alt={dept.headPerson.name}
+                                className="h-9 w-9 rounded-full object-cover ring-2 ring-purple-500/50 shrink-0"
+                              />
+                            ) : (
+                              <div className="h-9 w-9 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-600 shrink-0">
+                                <Crown className="h-4 w-4 fill-amber-500 text-amber-600" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                👑 Head
+                              </p>
+                              <p className="font-semibold text-xs truncate">
+                                {dept.headPerson?.name || dept.headName || "Not Assigned"}
+                              </p>
+                              {dept.headPerson?.designation && (
+                                <p className="text-[11px] text-muted-foreground truncate">
+                                  {dept.headPerson.designation}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Fav section */}
+                          <div className="flex items-center gap-3 bg-rose-500/5 p-2.5 rounded-lg border border-rose-500/15">
+                            {dept.favoritePerson?.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={dept.favoritePerson.imageUrl}
+                                alt={dept.favoritePerson.name}
+                                className="h-9 w-9 rounded-full object-cover ring-2 ring-rose-500/50 shrink-0"
+                              />
+                            ) : (
+                              <div className="h-9 w-9 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-600 shrink-0">
+                                <Heart className="h-4 w-4 fill-rose-500 text-rose-600" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                ❤️ Fav
+                              </p>
+                              <p className="font-semibold text-xs truncate">
+                                {dept.favoritePerson?.name || "Not Assigned"}
+                              </p>
+                              {dept.favoritePerson?.designation && (
+                                <p className="text-[11px] text-muted-foreground truncate">
+                                  {dept.favoritePerson.designation}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}

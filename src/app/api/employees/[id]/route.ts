@@ -11,8 +11,22 @@ export async function GET(
     if (!employee) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
+
+    let isHead = false
+    if (employee.department && employee.salary != null && employee.salary > 0) {
+      const highestInDept = await prisma.employee.findFirst({
+        where: { department: employee.department },
+        orderBy: { salary: "desc" },
+        select: { id: true },
+      })
+      if (highestInDept?.id === employee.id) {
+        isHead = true
+      }
+    }
+
     return NextResponse.json({
       ...employee,
+      isHead,
       joiningDate: employee.joiningDate.toISOString(),
       createdAt: employee.createdAt.toISOString(),
       updatedAt: employee.updatedAt.toISOString(),

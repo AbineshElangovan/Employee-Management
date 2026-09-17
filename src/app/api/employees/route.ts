@@ -12,12 +12,34 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     })
 
+    const maxSalaryMap = new Map<string, number>()
+    for (const emp of employees) {
+      if (emp.department && emp.salary != null) {
+        const curr = maxSalaryMap.get(emp.department) ?? -1
+        if (emp.salary > curr) {
+          maxSalaryMap.set(emp.department, emp.salary)
+        }
+      }
+    }
+
     return NextResponse.json(
-      employees.map((e) => ({...e,
-        joiningDate: e.joiningDate.toISOString(),
-        createdAt:   e.createdAt.toISOString(),
-        updatedAt:   e.updatedAt.toISOString(),
-      }))
+      employees.map((e) => {
+        const maxSal = e.department ? maxSalaryMap.get(e.department) : null
+        const isHead = Boolean(
+          e.department &&
+          e.salary != null &&
+          maxSal != null &&
+          e.salary === maxSal &&
+          e.salary > 0
+        )
+        return {
+          ...e,
+          isHead,
+          joiningDate: e.joiningDate.toISOString(),
+          createdAt: e.createdAt.toISOString(),
+          updatedAt: e.updatedAt.toISOString(),
+        }
+      })
     )
   } catch (error) {
     console.error("Employees fetch error:", error)

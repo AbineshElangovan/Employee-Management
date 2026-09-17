@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/ca
 import { Button } from "@/src/components/ui/button"
 import { Badge } from "@/src/components/ui/badge"
 import { Separator } from "@/src/components/ui/separator"
-import {Loader2, ArrowLeft, Mail, Phone, MapPin,Briefcase, Building2, Calendar, IndianRupee,IdCard, Activity, Trash2, Pencil,} from "lucide-react"
+import {Loader2, ArrowLeft, Mail, Phone, MapPin,Briefcase, Building2, Calendar, IndianRupee,IdCard, Activity, Trash2, Pencil, Crown, Heart,} from "lucide-react"
 import { toast } from "sonner"
 import { getEmployee, deleteEmployee, type Employee } from "@/src/lib/db-actions"
 import { useEmployeeStore } from "@/src/app/store/EmployeeStore"
@@ -127,10 +127,24 @@ export default function EmployeeViewPage() {
                 </p>
               </div>
 
-              <Badge className={`gap-1.5 ${badge.className}`}>
-                <span className={`h-2 w-2 rounded-full ${badge.dot}`} />
-                {badge.label}
-              </Badge>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Badge className={`gap-1.5 ${badge.className}`}>
+                  <span className={`h-2 w-2 rounded-full ${badge.dot}`} />
+                  {badge.label}
+                </Badge>
+                {employee.isHead && (
+                  <Badge className="bg-purple-500/15 text-purple-700 border-purple-500/30 dark:bg-purple-500/20 dark:text-purple-300 gap-1.5 font-semibold py-1 px-3 text-xs">
+                    <Crown className="h-3.5 w-3.5 fill-amber-500 text-amber-600" />
+                    👑 Head of {employee.department}
+                  </Badge>
+                )}
+                {employee.isFavorite && (
+                  <Badge className="bg-rose-500/15 text-rose-700 border-rose-500/30 dark:bg-rose-500/20 dark:text-rose-300 gap-1.5 font-semibold py-1 px-3 text-xs">
+                    <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-600" />
+                    ❤️ Favorite Employee
+                  </Badge>
+                )}
+              </div>
 
               <Separator />
 
