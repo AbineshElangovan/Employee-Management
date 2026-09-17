@@ -70,6 +70,13 @@ export default function EmployeesPage() {
     fetchEmployees()
   }, [])
 
+  const normalizeStatus = (status: string = "") => {
+    const s = status.toLowerCase().replace(/[\s_]+/g, "")
+    if (s === "active") return "active"
+    if (s === "onleave") return "on_leave"
+    return "inactive"
+  }
+
   const filteredEmployees = useCallback(() => {
     let filtered = [...employees]
 
@@ -89,21 +96,23 @@ export default function EmployeesPage() {
     }
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter((emp) => emp.status === statusFilter)
+      filtered = filtered.filter((emp) => normalizeStatus(emp.status) === normalizeStatus(statusFilter))
     }
 
     return filtered
   }, [employees, searchTerm, deptFilter, statusFilter])
 
   const getStatusColor = (status: string) => {
-    if (status === "active") return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
-    if (status === "on_leave") return "bg-amber-500/20 text-amber-500 border-amber-500/30"
+    const norm = normalizeStatus(status)
+    if (norm === "active") return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30"
+    if (norm === "on_leave") return "bg-amber-500/20 text-amber-500 border-amber-500/30"
     return "bg-red-500/20 text-red-500 border-red-500/30"
   }
 
   const getStatusLabel = (status: string) => {
-    if (status === "active") return "Active"
-    if (status === "on_leave") return "On Leave"
+    const norm = normalizeStatus(status)
+    if (norm === "active") return "Active"
+    if (norm === "on_leave") return "On Leave"
     return "Inactive"
   }
 

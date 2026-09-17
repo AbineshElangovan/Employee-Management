@@ -21,7 +21,7 @@ const employeeSchema = z.object({
   department: z.string().optional(),
   position: z.string().optional(),
   status: z.enum(["Active", "Inactive", "On Leave"], {
-    required_error: "Status is required",
+    message: "Status is required",
   }),
 });
 

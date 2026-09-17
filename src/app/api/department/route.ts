@@ -14,16 +14,17 @@ export async function GET() {
 
     const byDept = new Map<string, typeof allEmployees>()
     for (const emp of allEmployees) {
-      const list = byDept.get(emp.department) ?? []
+      const deptKey = emp.department || "Unassigned"
+      const list = byDept.get(deptKey) ?? []
       list.push(emp)
-      byDept.set(emp.department, list)
+      byDept.set(deptKey, list)
     }
 
     const departments = Array.from(byDept.entries())
       .map(([department, emps]) => {
         const head = [...emps]
           .filter((e) => e.salary != null)
-          .sort((a, b) => b.salary - a.salary)[0]
+          .sort((a, b) => (b.salary ?? 0) - (a.salary ?? 0))[0]
         return {
           department,
           employeeCount: emps.length,
@@ -40,11 +41,11 @@ export async function GET() {
     })
 
     const stats = {
-      totalSalary: aggregate._sum.salary ?? 0,
-      averageSalary: Math.round(aggregate._avg.salary ?? 0),
-      highestSalary: aggregate._max.salary ?? 0,
-      lowestSalary: aggregate._min.salary ?? 0,
-      averageAttendance: Math.round(aggregate._avg.attendancePercentage ?? 0),
+      totalSalary: aggregate._sum?.salary ?? 0,
+      averageSalary: Math.round(aggregate._avg?.salary ?? 0),
+      highestSalary: aggregate._max?.salary ?? 0,
+      lowestSalary: aggregate._min?.salary ?? 0,
+      averageAttendance: Math.round(aggregate._avg?.attendancePercentage ?? 0),
     }
 
     return NextResponse.json({ departments, stats })

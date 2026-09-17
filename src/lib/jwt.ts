@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 
-const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET!
-const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET!
+const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET || "default_access_secret"
+const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET || "default_refresh_secret"
 const ACCESS_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m"
 const REFRESH_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d"
 
@@ -12,11 +12,11 @@ export type JwtPayload = {
 }
 
 export function signAccessToken(payload: JwtPayload) {
-  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES_IN })
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES_IN as jwt.SignOptions["expiresIn"] })
 }
 
 export function signRefreshToken(payload: JwtPayload) {
-  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES_IN })
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES_IN as jwt.SignOptions["expiresIn"] })
 }
 
 export function verifyAccessToken(token: string): JwtPayload {

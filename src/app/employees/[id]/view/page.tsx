@@ -13,10 +13,11 @@ import { getEmployee, deleteEmployee, type Employee } from "@/src/lib/db-actions
 import { useEmployeeStore } from "@/src/app/store/EmployeeStore"
 
 function getStatusBadge(status: string) {
-  switch (status) {
+  const norm = status?.toLowerCase().replace(/[\s_]+/g, "")
+  switch (norm) {
     case "active":
       return { label: "Active", className: "bg-emerald-500/20 text-emerald-500 border-emerald-500/30", dot: "bg-emerald-500" }
-    case "on_leave":
+    case "onleave":
       return { label: "On Leave", className: "bg-amber-500/20 text-amber-500 border-amber-500/30", dot: "bg-amber-500" }
     default:
       return { label: "Inactive", className: "bg-red-500/20 text-red-500 border-red-500/30", dot: "bg-red-500" }

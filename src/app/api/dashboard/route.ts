@@ -9,10 +9,10 @@ export async function GET() {
 
     const totalEmployees = allStatuses.length
     const activeEmployees = allStatuses.filter(
-      (e) => e.status?.toLowerCase() === "active"
+      (e) => e.status?.toLowerCase().replace(/[\s_]+/g, "") === "active"
     ).length
     const onLeaveEmployees = allStatuses.filter(
-      (e) => e.status?.toLowerCase() === "on_leave"
+      (e) => e.status?.toLowerCase().replace(/[\s_]+/g, "") === "onleave"
     ).length
 
     const deptStats = await prisma.employee.groupBy({
